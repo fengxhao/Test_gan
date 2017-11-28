@@ -101,9 +101,11 @@ def main(_):
     G_imge = Generator(z)
 
     real_img= tf.transpose(tf.reshape(X_image,[-1,3,32,32]),perm=[0,2,3,1])#BHWC
+    fake_img= tf.reshape(G_imge,[-1,32,32,3])
 
     disc_real = Discriminator(real_img)
-    disc_fake = Discriminator(G_imge,True)
+    disc_fake = Discriminator(fake_img,True)
+
     #***reshpe real data n*3072
     X_image_trans=tf.reshape(real_img,[-1,FLAGS.Out_DIm])
 
@@ -118,7 +120,7 @@ def main(_):
 
     #******************************************
     bandwidths = [2.0, 5.0, 10.0, 20.0, 40.0, 80.0]
-   #kernel_cost = mmd.mix_rbf_mmd2(disc_real,disc_fake,sigmas=bandwidths)
+    #kernel_cost = mmd.mix_rbf_mmd2(disc_real,disc_fake,sigmas=bandwidths)
 
     # gen_cost  = kernel_cost
     # disc_cost = -1*kernel_cost
@@ -137,7 +139,8 @@ def main(_):
         )
         differences = X_image_trans - G_imge
         interpolates = X_image_trans + (alpha*differences)
-        gradients = tf.gradients(Discriminator(interpolates,reuse=True), [interpolates])[0]
+        inter_image = tf.reshape(interpolates,[-1,32,32,3])
+        gradients = tf.gradients(Discriminator(inter_image,reuse=True), [interpolates])[0]
         slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
         gradient_penalty = tf.reduce_mean((slopes-1.)**2)
         gp_cost= 10*gradient_penalty
