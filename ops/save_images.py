@@ -6,7 +6,7 @@ import numpy as np
 import scipy.misc
 from scipy.misc import imsave
 
-def save_images(X, save_path):
+def save_images(X):
     # [0, 1] -> [0,255]
     if isinstance(X.flatten()[0], np.floating):
         X = (255.99*X).astype('uint8')
@@ -35,4 +35,5 @@ def save_images(X, save_path):
         i = n%nw
         img[j*h:j*h+h, i*w:i*w+w] = x
 
-    imsave(save_path, img)
+    #imsave(save_path, img)
+    return img
