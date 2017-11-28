@@ -29,8 +29,8 @@ def fc(X,num_out,scope="fc"):
         fc = tf.nn.bias_add(fc,bias)
     return fc
 
-def bn(X,decay=0.95,epsilon =1e-5,scale=True,reuse = True,scope="batch_normal"):
-    bn =  tf.layers.batch_normalization(X,momentum=decay,epsilon=epsilon,scale=scale,training=True,reuse=reuse,name=scope)
+def bn(X,decay=0.95,epsilon =1e-5,scale=True,scope="batch_normal"):
+    bn =  tf.layers.batch_normalization(X,momentum=decay,epsilon=epsilon,scale=scale,training=True,name=scope)
     return bn
 
 def leaky_relu(X,leak=0.2):
