@@ -51,43 +51,29 @@ def Generator(n_samples=None,noise=None,labels=None,reuse=False,nums=50):
         output = lib.ops.batchnorm.Batchnorm('Generator.BN1', [0], output)
         output = tf.nn.relu(output)
         output = tf.reshape(output, [-1, 4*DIM, 4, 4])
-
         output = lib.ops.deconv2d.Deconv2D('Generator.2', 4*DIM, 2*DIM, 5, output)
         output = lib.ops.batchnorm.Batchnorm('Generator.BN2', [0,2,3], output)
         output = tf.nn.relu(output)
-
         output = lib.ops.deconv2d.Deconv2D('Generator.3', 2*DIM, DIM, 5, output)
         output = lib.ops.batchnorm.Batchnorm('Generator.BN3', [0,2,3], output)
         output = tf.nn.relu(output)
-
         output = lib.ops.deconv2d.Deconv2D('Generator.5', DIM, 3, 5, output)
-
         output = tf.tanh(output)
 
     return tf.reshape(output, [-1, OUTPUT_DIM])
-
-
 def Discriminator(input,reuse=False):
     with tf.variable_scope("Discriminator") as scope:
         if reuse:
             scope.reuse_variables()
-
         output = tf.reshape(input, [-1, 3, 32, 32])
-
         output = lib.ops.conv2d.Conv2D('Discriminator.1', 3, DIM, 5, output, stride=2)
         output = LeakyReLU(output)
-
         output = lib.ops.conv2d.Conv2D('Discriminator.2', DIM, 2*DIM, 5, output, stride=2)
-
         output = LeakyReLU(output)
-
         output = lib.ops.conv2d.Conv2D('Discriminator.3', 2*DIM, 4*DIM, 5, output, stride=2)
-
         output = LeakyReLU(output)
-
         output = tf.reshape(output, [-1, 4*4*4*DIM])
         output = lib.ops.linear.Linear('Discriminator.Output', 4*4*4*DIM, 1, output)
-
     return tf.reshape(output, [-1])
 
 def Generator_k(z,labels=None,reuse=False,nums=50):
@@ -98,31 +84,18 @@ def Generator_k(z,labels=None,reuse=False,nums=50):
             z = tf.random_normal([nums,FLAGS.z_dim])
         if labels is not None:
             z = tf.concat([z,labels],1)
-
         z_labels = tlib.fc(z,4*4*4*FLAGS.DIM,scope="project")
-
         bn1 = tlib.bn(z_labels,scope="bn1")
-
         out_put = tf.nn.relu(bn1)
-
         out_put = tf.reshape(out_put,[-1,4,4,4*FLAGS.DIM])
-
         dconv1 = tlib.Con2D_transpose(out_put,[nums,8,8,2*FLAGS.DIM],5,2,scope="conv2D_transpose1")
-
         bnconv1 = tlib.bn(dconv1,scope="bn2")
-
         h1 = tf.nn.relu(bnconv1)
-
         dconv2=tlib.Con2D_transpose(h1,[nums,16,16,FLAGS.DIM],5,2,scope="conv2D_transpose2")
-
         bnconv2 =tlib.bn(dconv2,scope="bn3")
-
         h2= tf.nn.relu(bnconv2)
-
         dconv3 = tlib.Con2D_transpose(h2,[nums,32,32,FLAGS.input_channel],5,2,scope="conv2D_transpose3")
-
         h3 = tf.tanh(dconv3)
-
     return tf.reshape(h3,[-1,FLAGS.Out_DIm])
 
 def Discriminator_k(input,reuse=False):
@@ -130,29 +103,17 @@ def Discriminator_k(input,reuse=False):
         if reuse:
             scope.reuse_variables()
         image = tf.transpose(tf.reshape(input,[-1,3,32,32]),perm=[0,2,3,1])
-
         conv1 = tlib.Con2D(image,FLAGS.DIM,5,2,scope="conv1")
-
         relu1 = tlib.leaky_relu(conv1)
-
         conv2 = tlib.Con2D(relu1,2*FLAGS.DIM,5,2,scope="conv2")
-
         relu2 = tlib.leaky_relu(conv2)
-
         conv3= tlib.Con2D(relu2,4*FLAGS.DIM,5,2,scope="conv3")
-
         relu3 =tlib.leaky_relu(conv3)
-
         out_put = tf.reshape(relu3,[-1,4*4*4*FLAGS.DIM])
-
         fc1= tlib.fc(out_put,1,scope="fc1")
-
     return tf.reshape(fc1, [-1])
 
-
-
-
-data_dir="/home/feng/ipyhthon/GAN_code/data/cifar-10"
+data_dir="/home/shen/fh/data/cifar10"
 train_data,dev_data= cifar10.load(FLAGS.batch_size,data_dir)
 
 def inf_train_gen():

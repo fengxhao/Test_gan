@@ -85,10 +85,7 @@ def Discriminator(input,reuse=False):
     return tf.reshape(fc1, [-1])
 
 
-
-
-
-data_dir="/home/feng/ipyhthon/GAN_code/data/cifar-10"
+data_dir="/home/shen/fh/data/cifar10"
 train_data,dev_data= cifar10.load(FLAGS.batch_size,data_dir)
 
 def inf_train_gen():
@@ -153,7 +150,11 @@ def main(_):
     tensor_noise = tf.constant(np.random.normal(size=(128, 128)).astype('float32'))
     gen_save_image = Generator(tensor_noise,reuse=True,nums=128)
 
-    with tf.Session() as sess:
+    #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.3333) 
+    config = tf.ConfigProto()  
+    config.gpu_options.per_process_gpu_memory_fraction = 0.5
+    config.gpu_options.allow_growth=True 	
+    with tf.Session(config=config) as sess:
         sess.run(tf.initialize_all_variables())
         gen = inf_train_gen()
         for i in xrange(FLAGS.iter_range):
@@ -164,7 +165,7 @@ def main(_):
 
             for x in xrange(FLAGS.disc_inter):
                 _disc,_ = sess.run([disc_cost,disc_train],feed_dict={X_image_int:data})
-            if i>0:
+            if i>-1:
                 D_real,D_fake,gp_cost_ = sess.run([disc_real,disc_fake,gp_cost],feed_dict={X_image_int:data})
                 plot.plot("Discriminator",_disc)
                 plot.plot("D_real",np.mean(D_real))
@@ -172,7 +173,7 @@ def main(_):
                 plot.plot("gp_cost:",gp_cost_)
                 plot.plot('time', time.time() - start_time)
 #*********************************inception score******************************************
-            if i%100 ==99:
+            if i%10000==999:
                 all_samples = []
                 gen_tensor_flow = tf.random_normal([128,128])
                 gen_img = Generator(gen_tensor_flow,reuse=True,nums=128)
@@ -187,7 +188,7 @@ def main(_):
             if i%100==99:
                 image = sess.run(gen_save_image)
                 images_ = ((image+1.)*(255./2)).astype('int32')
-                save_images.save_images(images_.reshape((128,32,32,3)),"./save_cifar_image/gen_image_{}.png".format(i))
+                save_images.save_images(images_.reshape((128,3,32,32)),"./save_cifar_image/gen_image_{}.png".format(i))
                 val_dis_list=[]
 
                 for images_,_ in dev_data():

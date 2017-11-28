@@ -15,7 +15,7 @@ import glob
 import scipy.misc
 import math
 import sys
-MODEL_DIR = '/home/feng/ipyhthon/GAN_code/data/imagenet'
+MODEL_DIR = '/home/shen/fh/data/imagenet'
 DATA_URL = 'http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz'
 softmax = None
 
