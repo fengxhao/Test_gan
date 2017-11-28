@@ -21,6 +21,7 @@ flags.DEFINE_integer("disc_inter",5,"disc iter")
 flags.DEFINE_boolean("is_gp",True,"is gp")
 flags.DEFINE_boolean("is_fsr",False,"is feasible set reduction")
 flags.DEFINE_integer("lambda_reg",16,"is regularize fsr")
+flags.DEFINE_string("log_dir","/home/shen/fh/Test_gan/log_wgan","log dir for wgan")
 FLAGS = flags.FLAGS
 
 
@@ -103,6 +104,9 @@ def main(_):
     real_img= tf.transpose(tf.reshape(X_image,[-1,3,32,32]),perm=[0,2,3,1])#BHWC
     fake_img= tf.reshape(G_imge,[-1,32,32,3])
 
+    tf.summary.image("train/input image",save_images.save_images(real_img))
+    tf.summary.image("train/gen image",save_images.save_images(fake_img))
+
     disc_real = Discriminator(real_img)
     disc_fake = Discriminator(fake_img,True)
 
@@ -147,9 +151,12 @@ def main(_):
 
     disc_cost+=gp_cost
 
-    gen_train = tf.train.AdamOptimizer(learning_rate=1e-4, beta1=0.5,
+    tf.summary.scalar("Generator_cost",gen_cost)
+    tf.summary.scalar("Discriminator",disc_cost)
+
+    gen_train = tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=0.5,
         beta2=0.9).minimize(gen_cost,global_step=global_step,var_list=gen_params)
-    disc_train = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,
+    disc_train = tf.train.AdamOptimizer(learning_rate=learning_rate,beta1=0.5,
         beta2=0.9).minimize(disc_cost,global_step=global_step,var_list=disc_params)
 
     #tensor_noise = tf.random_normal([128,128])
@@ -162,22 +169,13 @@ def main(_):
     config.gpu_options.allow_growth=True 	
     with tf.Session(config=config) as sess:
         sess.run(tf.initialize_all_variables())
+        train_summary = tf.summary.merge_all()
+        write = tf.summary.FileWriter(logdir=FLAGS.log_dir,graph=sess.graph)
         gen = inf_train_gen()
         for i in xrange(FLAGS.iter_range):
             start_time = time.time()
             data = gen.next()
-            if i >0:
-                _genc,_ = sess.run([gen_cost,gen_train],feed_dict={X_image_int:data})
 
-            for x in xrange(FLAGS.disc_inter):
-                _disc,_ = sess.run([disc_cost,disc_train],feed_dict={X_image_int:data})
-            if i>-1:
-                D_real,D_fake,gp_cost_ = sess.run([disc_real,disc_fake,gp_cost],feed_dict={X_image_int:data})
-                plot.plot("Discriminator",_disc)
-                plot.plot("D_real",np.mean(D_real))
-                plot.plot("D_fake",np.mean(D_fake))
-                plot.plot("gp_cost:",gp_cost_)
-                plot.plot('time', time.time() - start_time)
 #*********************************inception score******************************************
             if i%10000==999:
                 all_samples = []
@@ -194,13 +192,29 @@ def main(_):
             if i%100==99:
                 image = sess.run(gen_save_image)
                 images_ = ((image+1.)*(255./2)).astype('int32')
-                save_images.save_images(images_.reshape((128,32,32,3)),"./save_cifar_image/gen_image_{}.png".format(i))
+                im=save_images.save_images(images_.reshape((128,32,32,3)))
+                tf.summary.image("train/dev image",save_images.save_images(im))
                 val_dis_list=[]
-
                 for images_,_ in dev_data():
                     _dev_disc_cost=sess.run(disc_cost,feed_dict={X_image_int:images_})
                     val_dis_list.append(_dev_disc_cost)
                 plot.plot("val_cost",np.mean(val_dis_list))
+            if i >0:
+                _genc,_ = sess.run([gen_cost,gen_train],feed_dict={X_image_int:data})
+
+            for x in xrange(FLAGS.disc_inter):
+                _disc,_,summary_str,step= sess.run([disc_cost,disc_train,train_summary,global_step],feed_dict={X_image_int:data})
+
+            if i%10==0 and i>0:
+                write.add_summary(summary_str,global_step=step)
+            if i>-1:
+                D_real,D_fake,gp_cost_ = sess.run([disc_real,disc_fake,gp_cost],feed_dict={X_image_int:data})
+                plot.plot("Discriminator",_disc)
+                plot.plot("D_real",np.mean(D_real))
+                plot.plot("D_fake",np.mean(D_fake))
+                plot.plot("gp_cost:",gp_cost_)
+                plot.plot('time', time.time() - start_time)
+
 
             if i<5 or i%100==99:
                 plot.flush()
