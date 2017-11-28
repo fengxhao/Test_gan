@@ -172,10 +172,10 @@ def main(_):
                 plot.plot("gp_cost:",gp_cost_)
                 plot.plot('time', time.time() - start_time)
 #*********************************inception score******************************************
-            if i%1000 ==999:
+            if i%100 ==99:
                 all_samples = []
                 gen_tensor_flow = tf.random_normal([128,128])
-                gen_img = Generator(gen_tensor_flow,reuse=True,nums=100)
+                gen_img = Generator(gen_tensor_flow,reuse=True,nums=128)
                 for i in xrange(10):
                     all_samples.append(sess.run(gen_img))
                 all_samples = np.concatenate(all_samples, axis=0)
