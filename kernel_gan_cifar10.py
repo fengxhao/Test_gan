@@ -64,9 +64,8 @@ def Discriminator(input,reuse=False):
     with tf.variable_scope("Discriminator") as scope:
         if reuse:
             scope.reuse_variables()
-        image = tf.transpose(tf.reshape(input,[-1,3,32,32]),perm=[0,2,3,1])
 
-        conv1 = tlib.Con2D(image,FLAGS.DIM,5,2,scope="conv1")
+        conv1 = tlib.Con2D(input,FLAGS.DIM,5,2,scope="conv1")
 
         relu1 = tlib.leaky_relu(conv1)
 
@@ -96,13 +95,17 @@ def inf_train_gen():
 
 def main(_):
     X_image_int = tf.placeholder(tf.int32,[FLAGS.batch_size,FLAGS.Out_DIm])
-    X_image =2*((tf.cast(X_image_int, tf.float32)/255.)-.5)
+    X_image =2*((tf.cast(X_image_int, tf.float32)/255.)-.5)#BCHW
 
     z=tf.random_normal([FLAGS.batch_size,FLAGS.z_dim])
-    G_image = Generator(z)
+    G_imge = Generator(z)
 
-    disc_real = Discriminator(X_image)
-    disc_fake = Discriminator(G_image,True)
+    real_img= tf.transpose(tf.reshape(X_image,[-1,3,32,32]),perm=[0,2,3,1])#BHWC
+
+    disc_real = Discriminator(real_img)
+    disc_fake = Discriminator(G_imge,True)
+    #***reshpe real data n*3072
+    X_image_trans=tf.reshape(real_img,[-1,FLAGS.Out_DIm])
 
     gen_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope="Generator")
     disc_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope="Discriminator")
@@ -132,8 +135,8 @@ def main(_):
             minval=0.,
             maxval=1.
         )
-        differences = G_image - X_image
-        interpolates = X_image + (alpha*differences)
+        differences = X_image_trans - G_imge
+        interpolates = X_image_trans + (alpha*differences)
         gradients = tf.gradients(Discriminator(interpolates,reuse=True), [interpolates])[0]
         slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
         gradient_penalty = tf.reduce_mean((slopes-1.)**2)
@@ -188,7 +191,7 @@ def main(_):
             if i%100==99:
                 image = sess.run(gen_save_image)
                 images_ = ((image+1.)*(255./2)).astype('int32')
-                save_images.save_images(images_.reshape((128,3,32,32)),"./save_cifar_image/gen_image_{}.png".format(i))
+                save_images.save_images(images_.reshape((128,32,32,3)),"./save_cifar_image/gen_image_{}.png".format(i))
                 val_dis_list=[]
 
                 for images_,_ in dev_data():
