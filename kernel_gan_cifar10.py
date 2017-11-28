@@ -104,8 +104,8 @@ def main(_):
     real_img= tf.transpose(tf.reshape(X_image,[-1,3,32,32]),perm=[0,2,3,1])#BHWC
     fake_img= tf.reshape(G_imge,[-1,32,32,3])
 
-    tf.summary.image("train/input image",save_images.save_images(real_img))
-    tf.summary.image("train/gen image",save_images.save_images(fake_img))
+    #tf.summary.image("train/input image",save_images.save_images(real_img))
+    #tf.summary.image("train/gen image",save_images.save_images(fake_img))
 
     disc_real = Discriminator(real_img)
     disc_fake = Discriminator(fake_img,True)
@@ -193,7 +193,7 @@ def main(_):
                 image = sess.run(gen_save_image)
                 images_ = ((image+1.)*(255./2)).astype('int32')
                 im=save_images.save_images(images_.reshape((128,32,32,3)))
-                tf.summary.image("train/dev image",save_images.save_images(im))
+                #tf.summary.image("train/dev image",save_images.save_images(im))
                 val_dis_list=[]
                 for images_,_ in dev_data():
                     _dev_disc_cost=sess.run(disc_cost,feed_dict={X_image_int:images_})
