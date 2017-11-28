@@ -171,7 +171,10 @@ def main(_):
     gen_label = tf.argmax(class_gen_label,1)
 
     #mnist_data  = input_data.read_data_sets("../data",one_hot=True)
-    with tf.Session() as sess:
+   # gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.333) 
+    config = tf.ConfigProto()  
+    config.gpu_options.allow_growth=True   
+    with tf.Session(config=config) as sess:
         sess.run(tf.global_variables_initializer())
         gen = inf_train_gen()
         for i in xrange(FLAGS.iter_range):
