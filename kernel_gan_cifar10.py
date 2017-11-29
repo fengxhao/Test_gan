@@ -159,16 +159,14 @@ def main(_):
         gradients = tf.gradients(Discriminator(inter_image,reuse=True), [interpolates])[0]
         slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
         gradient_penalty = tf.reduce_mean((slopes-1.)**2)
-        gp_cost= 10*gradient_penalty
-
-    disc_cost+=gp_cost
+        disc_cost+= 10*gradient_penalty
 
     tf.summary.scalar("Generator_cost",gen_cost)
     tf.summary.scalar("Discriminator_cost",disc_cost)
 
-    gen_train = tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=0.5,
+    gen_train = tf.train.AdamOptimizer(learning_rate=1e-4, beta1=0.5,
         beta2=0.9).minimize(gen_cost,global_step=global_step,var_list=gen_params)
-    disc_train = tf.train.AdamOptimizer(learning_rate=learning_rate,beta1=0.5,
+    disc_train = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,
         beta2=0.9).minimize(disc_cost,global_step=global_step,var_list=disc_params)
 
     #tensor_noise = tf.random_normal([128,128])
@@ -191,7 +189,6 @@ def main(_):
         for i in xrange(FLAGS.iter_range):
             start_time = time.time()
             data = gen.next()
-
 #*********************************inception score******************************************
             if i%100000==99999:
                 all_samples = []
@@ -213,12 +210,15 @@ def main(_):
 
             if i%10==0 and i>0:
                 write.add_summary(summary_str,global_step=i)
+                image = sess.run(gen_save_image)
+                images_ = ((image+1.)*(255./2)).astype('int32')
+                save_images.save_images(images_.reshape((128, 32, 32, 3)), './save_cifar_image/samples_{}.jpg'.format(i))
+
             if i>-1:
-                D_real,D_fake,gp_cost_ = sess.run([disc_real,disc_fake,gp_cost],feed_dict={X_image_int:data})
+                D_real,D_fake = sess.run([disc_real,disc_fake],feed_dict={X_image_int:data})
                 plot.plot("Discriminator",_disc)
                 plot.plot("D_real",np.mean(D_real))
                 plot.plot("D_fake",np.mean(D_fake))
-                plot.plot("gp_cost:",gp_cost_)
                 plot.plot('time', time.time() - start_time)
 
 
