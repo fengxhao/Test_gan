@@ -8,7 +8,7 @@ flags = tf.app.flags
 
 flags.DEFINE_integer('input_height',32,'input image height')
 flags.DEFINE_integer("input_widht",32,'input image width')
-flags.DEFINE_integer("batch_size",50,'input batch size')
+flags.DEFINE_integer("batch_size",64,'input batch size')
 flags.DEFINE_integer("input_channel",3,'input channel size')
 flags.DEFINE_integer("out_height",32,'output height')
 flags.DEFINE_integer("out_width",32,'output width')
@@ -21,12 +21,12 @@ flags.DEFINE_integer("disc_inter",5,"disc iter")
 flags.DEFINE_boolean("is_gp",True,"is gp")
 flags.DEFINE_boolean("is_fsr",False,"is feasible set reduction")
 flags.DEFINE_integer("lambda_reg",16,"is regularize fsr")
-flags.DEFINE_string("log_dir","/home/shen/fh/Test_gan/log_wgan","log dir for wgan")
+flags.DEFINE_string("log_dir","/home/shen/fh/log_wgan","log dir for wgan")
 FLAGS = flags.FLAGS
 
 
 
-def Generator(z,labels=None,reuse=False,nums=50):
+def Generator(z,labels=None,reuse=False,nums=64):
     with tf.variable_scope("Generator") as scope:
         if reuse:
             scope.reuse_variables()
@@ -93,6 +93,14 @@ def inf_train_gen():
         for images,targets in train_data():
             yield images
 
+def imageRearrange(image, block=8):
+    image = tf.slice(image, [0, 0, 0, 0], [block * block, -1, -1, -1])
+    x1 = tf.batch_to_space(image, [[0, 0], [0, 0]], block)
+    image_r = tf.reshape(tf.transpose(tf.reshape(x1,
+        [32, block, 32, block, 3])
+        , [1, 0, 3, 2, 4]),
+        [1, 32 * block, 32 * block, 3])
+    return image_r
 
 def main(_):
     X_image_int = tf.placeholder(tf.int32,[FLAGS.batch_size,FLAGS.Out_DIm])
@@ -104,8 +112,8 @@ def main(_):
     real_img= tf.transpose(tf.reshape(X_image,[-1,3,32,32]),perm=[0,2,3,1])#BHWC
     fake_img= tf.reshape(G_imge,[-1,32,32,3])
 
-    #tf.summary.image("train/input image",save_images.save_images(real_img))
-    #tf.summary.image("train/gen image",save_images.save_images(fake_img))
+    tf.summary.image("train/input image",imageRearrange(real_img))
+    tf.summary.image("train/gen image",imageRearrange(fake_img))
 
     disc_real = Discriminator(real_img)
     disc_fake = Discriminator(fake_img,True)
@@ -152,7 +160,7 @@ def main(_):
     disc_cost+=gp_cost
 
     tf.summary.scalar("Generator_cost",gen_cost)
-    tf.summary.scalar("Discriminator",disc_cost)
+    tf.summary.scalar("Discriminator_cost",disc_cost)
 
     gen_train = tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=0.5,
         beta2=0.9).minimize(gen_cost,global_step=global_step,var_list=gen_params)
@@ -160,8 +168,8 @@ def main(_):
         beta2=0.9).minimize(disc_cost,global_step=global_step,var_list=disc_params)
 
     #tensor_noise = tf.random_normal([128,128])
-    tensor_noise = tf.constant(np.random.normal(size=(128, 128)).astype('float32'))
-    gen_save_image = Generator(tensor_noise,reuse=True,nums=128)
+    tensor_noise = tf.constant(np.random.normal(size=(64, 128)).astype('float32'))
+    gen_save_image = Generator(tensor_noise,reuse=True,nums=64)
 
     #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.3333) 
     config = tf.ConfigProto()  
@@ -177,10 +185,10 @@ def main(_):
             data = gen.next()
 
 #*********************************inception score******************************************
-            if i%10000==999:
+            if i%10000==9999:
                 all_samples = []
-                gen_tensor_flow = tf.random_normal([128,128])
-                gen_img = Generator(gen_tensor_flow,reuse=True,nums=128)
+                gen_tensor_flow = tf.random_normal([64,128])
+                gen_img = Generator(gen_tensor_flow,reuse=True,nums=64)
                 for i in xrange(10):
                     all_samples.append(sess.run(gen_img))
                 all_samples = np.concatenate(all_samples, axis=0)
@@ -192,7 +200,7 @@ def main(_):
             if i%100==99:
                 image = sess.run(gen_save_image)
                 images_ = ((image+1.)*(255./2)).astype('int32')
-                im=save_images.save_images(images_.reshape((128,32,32,3)))
+                #im=save_images.save_images(images_.reshape((64,32,32,3)))
                 #tf.summary.image("train/dev image",save_images.save_images(im))
                 val_dis_list=[]
                 for images_,_ in dev_data():
