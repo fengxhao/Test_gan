@@ -111,7 +111,7 @@ def main(_):
 
     real_img= tf.transpose(tf.reshape(X_image,[-1,3,32,32]),perm=[0,2,3,1])#BHWC
 
-    real_img_rbg = tf.transpose(tf.reshape(X_image_int,[-1,3,32,32]),perm=[0,2,3,1])
+    real_img_rbg = tf.cast(tf.transpose(tf.reshape(X_image_int,[-1,3,32,32]),perm=[0,2,3,1]),tf.float32)
 
     fake_img= tf.reshape(G_imge,[-1,32,32,3])
     fake_img_rbg = tf.cast((fake_img+1.)*(255./2),tf.float32)
