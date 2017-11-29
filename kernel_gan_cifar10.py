@@ -21,7 +21,7 @@ flags.DEFINE_integer("disc_inter",5,"disc iter")
 flags.DEFINE_boolean("is_gp",True,"is gp")
 flags.DEFINE_boolean("is_fsr",False,"is feasible set reduction")
 flags.DEFINE_integer("lambda_reg",16,"is regularize fsr")
-flags.DEFINE_string("log_dir","/home/shen/fh/Test_gan/log_wgan","log dir for wgan")
+flags.DEFINE_string("log_dir","/home/shen/fh/log_wgan","log dir for wgan")
 FLAGS = flags.FLAGS
 
 
@@ -168,8 +168,8 @@ def main(_):
         beta2=0.9).minimize(disc_cost,global_step=global_step,var_list=disc_params)
 
     #tensor_noise = tf.random_normal([128,128])
-    tensor_noise = tf.constant(np.random.normal(size=(128, 128)).astype('float32'))
-    gen_save_image = Generator(tensor_noise,reuse=True,nums=128)
+    tensor_noise = tf.constant(np.random.normal(size=(64, 128)).astype('float32'))
+    gen_save_image = Generator(tensor_noise,reuse=True,nums=64)
 
     #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.3333) 
     config = tf.ConfigProto()  
@@ -185,10 +185,10 @@ def main(_):
             data = gen.next()
 
 #*********************************inception score******************************************
-            if i%10000==999:
+            if i%10000==9999:
                 all_samples = []
-                gen_tensor_flow = tf.random_normal([128,128])
-                gen_img = Generator(gen_tensor_flow,reuse=True,nums=128)
+                gen_tensor_flow = tf.random_normal([64,128])
+                gen_img = Generator(gen_tensor_flow,reuse=True,nums=64)
                 for i in xrange(10):
                     all_samples.append(sess.run(gen_img))
                 all_samples = np.concatenate(all_samples, axis=0)
@@ -200,7 +200,7 @@ def main(_):
             if i%100==99:
                 image = sess.run(gen_save_image)
                 images_ = ((image+1.)*(255./2)).astype('int32')
-                im=save_images.save_images(images_.reshape((128,32,32,3)))
+                #im=save_images.save_images(images_.reshape((64,32,32,3)))
                 #tf.summary.image("train/dev image",save_images.save_images(im))
                 val_dis_list=[]
                 for images_,_ in dev_data():
