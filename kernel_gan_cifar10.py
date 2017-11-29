@@ -8,7 +8,7 @@ flags = tf.app.flags
 
 flags.DEFINE_integer('input_height',32,'input image height')
 flags.DEFINE_integer("input_widht",32,'input image width')
-flags.DEFINE_integer("batch_size",64,'input batch size')
+flags.DEFINE_integer("batch_size",49,'input batch size')
 flags.DEFINE_integer("input_channel",3,'input channel size')
 flags.DEFINE_integer("out_height",32,'output height')
 flags.DEFINE_integer("out_width",32,'output width')
@@ -26,7 +26,7 @@ FLAGS = flags.FLAGS
 
 
 
-def Generator(z,labels=None,reuse=False,nums=64):
+def Generator(z,labels=None,reuse=False,nums=49):
     with tf.variable_scope("Generator") as scope:
         if reuse:
             scope.reuse_variables()
@@ -110,10 +110,14 @@ def main(_):
     G_imge = Generator(z)
 
     real_img= tf.transpose(tf.reshape(X_image,[-1,3,32,32]),perm=[0,2,3,1])#BHWC
-    fake_img= tf.reshape(G_imge,[-1,32,32,3])
 
-    tf.summary.image("train/input image",imageRearrange(real_img))
-    tf.summary.image("train/gen image",imageRearrange(fake_img))
+    real_img_rbg = tf.transpose(tf.reshape(X_image_int,[-1,3,32,32]),perm=[0,2,3,1])
+
+    fake_img= tf.reshape(G_imge,[-1,32,32,3])
+    fake_img_rbg = tf.cast((fake_img+1.)*(255./2),tf.int32)
+
+    tf.summary.image("train/input image",imageRearrange(real_img_rbg,7))
+    tf.summary.image("train/gen image",imageRearrange(fake_img_rbg,7))
 
     disc_real = Discriminator(real_img)
     disc_fake = Discriminator(fake_img,True)
@@ -170,6 +174,10 @@ def main(_):
     #tensor_noise = tf.random_normal([128,128])
     tensor_noise = tf.constant(np.random.normal(size=(64, 128)).astype('float32'))
     gen_save_image = Generator(tensor_noise,reuse=True,nums=64)
+    generator_img = tf.reshape(gen_save_image,[-1,32,32,3])
+    gen_img_rbg=tf.cast((generator_img+1.)*(255./2),tf.int32)
+
+    tf.summary.image("Test/dev image",imageRearrange(gen_img_rbg))
 
     #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.3333) 
     config = tf.ConfigProto()  
@@ -198,15 +206,15 @@ def main(_):
                 plot.plot("inception score:",score[0])
 #*******************************save image***************************************
             if i%100==99:
-                image = sess.run(gen_save_image)
-                images_ = ((image+1.)*(255./2)).astype('int32')
+                sess.run(gen_save_image)
+                #images_ = ((image+1.)*(255./2)).astype('int32')
                 #im=save_images.save_images(images_.reshape((64,32,32,3)))
                 #tf.summary.image("train/dev image",save_images.save_images(im))
-                val_dis_list=[]
-                for images_,_ in dev_data():
-                    _dev_disc_cost=sess.run(disc_cost,feed_dict={X_image_int:images_})
-                    val_dis_list.append(_dev_disc_cost)
-                plot.plot("val_cost",np.mean(val_dis_list))
+                # val_dis_list=[]
+                # for images_,_ in dev_data():
+                #     _dev_disc_cost=sess.run(disc_cost,feed_dict={X_image_int:images_})
+                #     val_dis_list.append(_dev_disc_cost)
+                # plot.plot("val_cost",np.mean(val_dis_list))
             if i >0:
                 _genc,_ = sess.run([gen_cost,gen_train],feed_dict={X_image_int:data})
 
@@ -214,7 +222,7 @@ def main(_):
                 _disc,_,summary_str,step= sess.run([disc_cost,disc_train,train_summary,global_step],feed_dict={X_image_int:data})
 
             if i%10==0 and i>0:
-                write.add_summary(summary_str,global_step=step)
+                write.add_summary(summary_str,global_step=i)
             if i>-1:
                 D_real,D_fake,gp_cost_ = sess.run([disc_real,disc_fake,gp_cost],feed_dict={X_image_int:data})
                 plot.plot("Discriminator",_disc)
