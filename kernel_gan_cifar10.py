@@ -8,7 +8,7 @@ flags = tf.app.flags
 
 flags.DEFINE_integer('input_height',32,'input image height')
 flags.DEFINE_integer("input_widht",32,'input image width')
-flags.DEFINE_integer("batch_size",50,'input batch size')
+flags.DEFINE_integer("batch_size",64,'input batch size')
 flags.DEFINE_integer("input_channel",3,'input channel size')
 flags.DEFINE_integer("out_height",32,'output height')
 flags.DEFINE_integer("out_width",32,'output width')
@@ -26,7 +26,7 @@ FLAGS = flags.FLAGS
 
 
 
-def Generator(z,labels=None,reuse=False,nums=50):
+def Generator(z,labels=None,reuse=False,nums=64):
     with tf.variable_scope("Generator") as scope:
         if reuse:
             scope.reuse_variables()

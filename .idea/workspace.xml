@@ -56,8 +56,8 @@
       <file leaf-file-name="kernel_gan_cifar10.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/kernel_gan_cifar10.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.6732673">
-              <caret line="118" column="44" selection-start-line="118" selection-start-column="44" selection-end-line="118" selection-end-column="44" />
+            <state vertical-scroll-proportion="0.7405941">
+              <caret line="115" column="64" selection-start-line="115" selection-start-column="64" selection-end-line="115" selection-end-column="64" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
               </folding>
@@ -702,8 +702,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/kernel_gan_cifar10.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.6732673">
-          <caret line="118" column="44" selection-start-line="118" selection-start-column="44" selection-end-line="118" selection-end-column="44" />
+        <state vertical-scroll-proportion="0.7405941">
+          <caret line="115" column="64" selection-start-line="115" selection-start-column="64" selection-end-line="115" selection-end-column="64" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
           </folding>
