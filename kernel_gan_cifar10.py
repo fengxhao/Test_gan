@@ -114,7 +114,7 @@ def main(_):
     real_img_rbg = tf.transpose(tf.reshape(X_image_int,[-1,3,32,32]),perm=[0,2,3,1])
 
     fake_img= tf.reshape(G_imge,[-1,32,32,3])
-    fake_img_rbg = tf.cast((fake_img+1.)*(255./2),tf.int32)
+    fake_img_rbg = tf.cast((fake_img+1.)*(255./2),tf.float32)
 
     tf.summary.image("train/input image",imageRearrange(real_img_rbg,7))
     tf.summary.image("train/gen image",imageRearrange(fake_img_rbg,7))
@@ -175,7 +175,7 @@ def main(_):
     tensor_noise = tf.constant(np.random.normal(size=(64, 128)).astype('float32'))
     gen_save_image = Generator(tensor_noise,reuse=True,nums=64)
     generator_img = tf.reshape(gen_save_image,[-1,32,32,3])
-    gen_img_rbg=tf.cast((generator_img+1.)*(255./2),tf.int32)
+    gen_img_rbg=tf.cast((generator_img+1.)*(255./2),tf.float32)
 
     tf.summary.image("Test/dev image",imageRearrange(gen_img_rbg))
 
