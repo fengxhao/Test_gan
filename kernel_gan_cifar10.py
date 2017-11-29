@@ -93,6 +93,14 @@ def inf_train_gen():
         for images,targets in train_data():
             yield images
 
+def imageRearrange(image, block=8):
+    image = tf.slice(image, [0, 0, 0, 0], [block * block, -1, -1, -1])
+    x1 = tf.batch_to_space(image, [[0, 0], [0, 0]], block)
+    image_r = tf.reshape(tf.transpose(tf.reshape(x1,
+        [32, block, 32, block, 3])
+        , [1, 0, 3, 2, 4]),
+        [1, 32 * block, 32 * block, 3])
+    return image_r
 
 def main(_):
     X_image_int = tf.placeholder(tf.int32,[FLAGS.batch_size,FLAGS.Out_DIm])
@@ -104,8 +112,8 @@ def main(_):
     real_img= tf.transpose(tf.reshape(X_image,[-1,3,32,32]),perm=[0,2,3,1])#BHWC
     fake_img= tf.reshape(G_imge,[-1,32,32,3])
 
-    #tf.summary.image("train/input image",save_images.save_images(real_img))
-    #tf.summary.image("train/gen image",save_images.save_images(fake_img))
+    tf.summary.image("train/input image",imageRearrange(real_img))
+    tf.summary.image("train/gen image",imageRearrange(fake_img))
 
     disc_real = Discriminator(real_img)
     disc_fake = Discriminator(fake_img,True)
@@ -152,7 +160,7 @@ def main(_):
     disc_cost+=gp_cost
 
     tf.summary.scalar("Generator_cost",gen_cost)
-    tf.summary.scalar("Discriminator",disc_cost)
+    tf.summary.scalar("Discriminator_cost",disc_cost)
 
     gen_train = tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=0.5,
         beta2=0.9).minimize(gen_cost,global_step=global_step,var_list=gen_params)
