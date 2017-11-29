@@ -190,7 +190,7 @@ def main(_):
             start_time = time.time()
             data = gen.next()
 #*********************************inception score******************************************
-            if i%10000==9999:
+            if i%1000==999:
                 all_samples = []
                 gen_tensor_flow = tf.random_normal([64,128])
                 gen_img = Generator(gen_tensor_flow,reuse=True,nums=64)
@@ -208,7 +208,7 @@ def main(_):
             for x in xrange(FLAGS.disc_inter):
                 _disc,_,summary_str,step= sess.run([disc_cost,disc_train,train_summary,global_step],feed_dict={X_image_int:data})
 
-            if i%10==0 and i>0:
+            if i%100==0 and i>0:
                 write.add_summary(summary_str,global_step=i)
                 image = sess.run(gen_save_image)
                 images_ = ((image+1.)*(255./2)).astype('int32')
