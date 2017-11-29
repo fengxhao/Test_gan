@@ -204,17 +204,7 @@ def main(_):
                 all_samples = all_samples.reshape((-1, 32, 32,3))
                 score = inception_score.get_inception_score(list(all_samples))
                 plot.plot("inception score:",score[0])
-#*******************************save image***************************************
-            if i%100==99:
-                sess.run(gen_save_image)
-                #images_ = ((image+1.)*(255./2)).astype('int32')
-                #im=save_images.save_images(images_.reshape((64,32,32,3)))
-                #tf.summary.image("train/dev image",save_images.save_images(im))
-                # val_dis_list=[]
-                # for images_,_ in dev_data():
-                #     _dev_disc_cost=sess.run(disc_cost,feed_dict={X_image_int:images_})
-                #     val_dis_list.append(_dev_disc_cost)
-                # plot.plot("val_cost",np.mean(val_dis_list))
+
             if i >0:
                 _genc,_ = sess.run([gen_cost,gen_train],feed_dict={X_image_int:data})
 
