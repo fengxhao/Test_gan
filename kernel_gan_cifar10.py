@@ -212,7 +212,7 @@ def main(_):
                 write.add_summary(summary_str,global_step=i)
                 image = sess.run(gen_save_image)
                 images_ = ((image+1.)*(255./2)).astype('int32')
-                save_images.save_images(images_.reshape((128, 32, 32, 3)), './save_cifar_image/samples_{}.jpg'.format(i))
+                save_images.save_images(images_.reshape((64, 32, 32, 3)), './save_cifar_image/samples_{}.jpg'.format(i))
 
             if i>-1:
                 D_real,D_fake = sess.run([disc_real,disc_fake],feed_dict={X_image_int:data})
