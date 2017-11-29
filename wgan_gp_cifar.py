@@ -102,8 +102,8 @@ def Discriminator_k(input,reuse=False):
     with tf.variable_scope("Discriminator") as scope:
         if reuse:
             scope.reuse_variables()
-        image = tf.transpose(tf.reshape(input,[-1,3,32,32]),perm=[0,2,3,1])
-        conv1 = tlib.Con2D(image,FLAGS.DIM,5,2,scope="conv1")
+        #image = tf.transpose(tf.reshape(input,[-1,3,32,32]),perm=[0,2,3,1])
+        conv1 = tlib.Con2D(input,FLAGS.DIM,5,2,scope="conv1")
         relu1 = tlib.leaky_relu(conv1)
         conv2 = tlib.Con2D(relu1,2*FLAGS.DIM,5,2,scope="conv2")
         relu2 = tlib.leaky_relu(conv2)
@@ -129,8 +129,13 @@ def main(_):
     z=tf.random_normal([FLAGS.batch_size,FLAGS.z_dim])
     G_image = Generator_k(z)
 
-    disc_real = Discriminator_k(X_image)
-    disc_fake = Discriminator_k(G_image,reuse=True)
+    real_image = tf.transpose(tf.reshape(X_image,[-1,3,32,32]),perm=[0,2,3,1])
+    X_image_i=tf.reshape(real_image,[-1,3072])
+    fake_image = tf.reshape(G_image,[-1,32,32,3])
+
+
+    disc_real = Discriminator_k(real_image)
+    disc_fake = Discriminator_k(fake_image,reuse=True)
 
     gen_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope="Generator")
     disc_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope="Discriminator")
@@ -145,9 +150,10 @@ def main(_):
         minval=0.,
         maxval=1.
     )
-    differences = G_image - X_image
-    interpolates = X_image + (alpha*differences)
-    gradients = tf.gradients(Discriminator_k(interpolates,reuse=True), [interpolates])[0]
+    differences = G_image - X_image_i
+    interpolates = X_image_i + (alpha*differences)
+    inter_im = tf.reshape(interpolates,[-1,32,32,3])
+    gradients = tf.gradients(Discriminator_k(inter_im,reuse=True), [interpolates])[0]
     slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
     gradient_penalty = tf.reduce_mean((slopes-1.)**2)
     disc_cost += LAMBDA*gradient_penalty
