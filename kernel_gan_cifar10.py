@@ -193,7 +193,7 @@ def main(_):
             data = gen.next()
 
 #*********************************inception score******************************************
-            if i%10000==9999:
+            if i%100000==99999:
                 all_samples = []
                 gen_tensor_flow = tf.random_normal([64,128])
                 gen_img = Generator(gen_tensor_flow,reuse=True,nums=64)
