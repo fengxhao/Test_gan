@@ -19,7 +19,7 @@ from ops import mmd
 # Download CIFAR-10 (Python version) at
 # https://www.cs.toronto.edu/~kriz/cifar.html and fill in the path to the
 # extracted files here!
-DATA_DIR = '/home/shen/fh/Test_gan/data/cifar-10'
+DATA_DIR = '/home/shen/fh/data/cifar10'
 if len(DATA_DIR) == 0:
     raise Exception('Please specify path to data directory in gan_cifar.py!')
 
@@ -28,7 +28,7 @@ DIM = 128 # This overfits substantially; you're probably better off with 64
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
 CRITIC_ITERS = 5 # How many critic iterations per generator iteration
 BATCH_SIZE = 64 # Batch size
-ITERS = 200000 # How many generator iterations to train for
+ITERS = 100000 # How many generator iterations to train for
 OUTPUT_DIM = 3072 # Number of pixels in CIFAR10 (3*32*32)
 
 lib.print_model_settings(locals().copy())
@@ -86,7 +86,7 @@ def Discriminator(inputs):
     output = tf.reshape(output, [-1, 4*4*4*DIM])
     output = lib.ops.linear.Linear('Discriminator.Output', 4*4*4*DIM, 1, output)
 
-    return tf.reshape(output, [-1])
+    return tf.reshape(output, [BATCH_SIZE,1])
 
 real_data_int = tf.placeholder(tf.int32, shape=[BATCH_SIZE, OUTPUT_DIM])
 real_data = 2*((tf.cast(real_data_int, tf.float32)/255.)-.5)
@@ -130,7 +130,7 @@ fixed_noise_samples_128 = Generator(128, noise=fixed_noise_128)
 def generate_image(frame, true_dist):
     samples = session.run(fixed_noise_samples_128)
     samples = ((samples+1.)*(255./2)).astype('int32')
-    lib.save_images.save_images(samples.reshape((128, 3, 32, 32)), 'samples_{}.jpg'.format(frame))
+    lib.save_images.save_images(samples.reshape((128, 3, 32, 32)), './save_cifar_image/samples_{}.jpg'.format(frame))
 
 # For calculating inception score
 samples_100 = Generator(100)
@@ -159,7 +159,7 @@ with tf.Session() as session:
         start_time = time.time()
         # Train generator
         if iteration > 0:
-            _ = session.run(gen_train_op)
+            _ = session.run(gen_train_op, feed_dict={real_data_int: _data})
         # Train critic
         for i in xrange(CRITIC_ITERS):
             _data = gen.next()
