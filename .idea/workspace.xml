@@ -29,11 +29,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="kernel_gan.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/kernel_gan.py">
+      <file leaf-file-name="kernel_ac_wgan.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/kernel_ac_wgan.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="76" column="0" selection-start-line="76" selection-start-column="0" selection-end-line="76" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.3714789">
+              <caret line="185" column="52" selection-start-line="185" selection-start-column="0" selection-end-line="186" selection-end-column="0" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
               </folding>
@@ -41,11 +41,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="kernel_ac_wgan.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/kernel_ac_wgan.py">
+      <file leaf-file-name="ac_wgan.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/ac_wgan.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.5331126">
-              <caret line="131" column="89" selection-start-line="131" selection-start-column="89" selection-end-line="131" selection-end-column="89" />
+            <state vertical-scroll-proportion="0.0">
+              <caret line="123" column="65" selection-start-line="123" selection-start-column="65" selection-end-line="123" selection-end-column="65" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
               </folding>
@@ -69,9 +69,14 @@
         <entry file="file://$PROJECT_DIR$/kernel_gan_cifar10.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="-22.194445">
-              <caret line="197" column="57" selection-start-line="197" selection-start-column="57" selection-end-line="197" selection-end-column="57" />
+              <caret line="201" column="57" selection-start-line="201" selection-start-column="57" selection-end-line="201" selection-end-column="57" />
               <folding>
-                <element signature="e#0#23#0" expanded="true" />
+                <marker date="1512035930243" expanded="true" signature="0:185" placeholder="import ..." />
+                <marker date="1512035930243" expanded="true" signature="1204:2194" placeholder="..." />
+                <marker date="1512035930243" expanded="true" signature="2233:2789" placeholder="..." />
+                <marker date="1512035930243" expanded="true" signature="2968:3053" placeholder="..." />
+                <marker date="1512035930243" expanded="true" signature="3090:3395" placeholder="..." />
+                <marker date="1512035930243" expanded="true" signature="3409:8963" placeholder="..." />
               </folding>
             </state>
           </provider>
@@ -80,8 +85,8 @@
       <file leaf-file-name="mmd.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ops/mmd.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-11.388889">
-              <caret line="50" column="32" selection-start-line="50" selection-start-column="32" selection-end-line="50" selection-end-column="32" />
+            <state vertical-scroll-proportion="-9.972222">
+              <caret line="29" column="45" selection-start-line="29" selection-start-column="43" selection-end-line="29" selection-end-column="45" />
               <folding>
                 <element signature="e#49#80#0" expanded="true" />
               </folding>
@@ -93,7 +98,7 @@
         <entry file="file://$PROJECT_DIR$/gan_cifar.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="164" column="38" selection-start-line="164" selection-start-column="38" selection-end-line="164" selection-end-column="38" />
+              <caret line="80" column="0" selection-start-line="80" selection-start-column="0" selection-end-line="80" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -150,9 +155,9 @@
         <option value="$PROJECT_DIR$/kernel_gan_cifar10.py" />
         <option value="$PROJECT_DIR$/gan_cifar.py" />
         <option value="$PROJECT_DIR$/kernel_gan.py" />
-        <option value="$PROJECT_DIR$/ops/mmd.py" />
         <option value="$PROJECT_DIR$/kernel_condition_gan.py" />
         <option value="$PROJECT_DIR$/kernel_ac_wgan.py" />
+        <option value="$PROJECT_DIR$/ops/mmd.py" />
       </list>
     </option>
   </component>
@@ -699,30 +704,17 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/gan_cifar.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="164" column="38" selection-start-line="164" selection-start-column="38" selection-end-line="164" selection-end-column="38" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ac_wgan.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.33333334">
-          <caret line="105" column="0" selection-start-line="105" selection-start-column="0" selection-end-line="105" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#23#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/kernel_gan_cifar10.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="-22.194445">
-          <caret line="197" column="57" selection-start-line="197" selection-start-column="57" selection-end-line="197" selection-end-column="57" />
+          <caret line="201" column="57" selection-start-line="201" selection-start-column="57" selection-end-line="201" selection-end-column="57" />
           <folding>
-            <element signature="e#0#23#0" expanded="true" />
+            <marker date="1512035930243" expanded="true" signature="0:185" placeholder="import ..." />
+            <marker date="1512035930243" expanded="true" signature="1204:2194" placeholder="..." />
+            <marker date="1512035930243" expanded="true" signature="2233:2789" placeholder="..." />
+            <marker date="1512035930243" expanded="true" signature="2968:3053" placeholder="..." />
+            <marker date="1512035930243" expanded="true" signature="3090:3395" placeholder="..." />
+            <marker date="1512035930243" expanded="true" signature="3409:8963" placeholder="..." />
           </folding>
         </state>
       </provider>
@@ -761,17 +753,19 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/kernel_condition_gan.py">
+    <entry file="file://$PROJECT_DIR$/ac_info_wgan.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.3946932">
-          <caret line="123" column="76" selection-start-line="123" selection-start-column="76" selection-end-line="123" selection-end-column="76" />
-          <folding />
+        <state vertical-scroll-proportion="-3.1241722">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#23#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/kernel_gan.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
+        <state vertical-scroll-proportion="0.028145695">
           <caret line="76" column="0" selection-start-line="76" selection-start-column="0" selection-end-line="76" selection-end-column="0" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
@@ -779,20 +773,38 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/gan_cifar.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="80" column="0" selection-start-line="80" selection-start-column="0" selection-end-line="80" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/ops/mmd.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-11.388889">
-          <caret line="50" column="32" selection-start-line="50" selection-start-column="32" selection-end-line="50" selection-end-column="32" />
+        <state vertical-scroll-proportion="-9.972222">
+          <caret line="29" column="45" selection-start-line="29" selection-start-column="43" selection-end-line="29" selection-end-column="45" />
           <folding>
             <element signature="e#49#80#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/ac_wgan.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="123" column="65" selection-start-line="123" selection-start-column="65" selection-end-line="123" selection-end-column="65" />
+          <folding>
+            <element signature="e#0#23#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/kernel_ac_wgan.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.5331126">
-          <caret line="131" column="89" selection-start-line="131" selection-start-column="89" selection-end-line="131" selection-end-column="89" />
+        <state vertical-scroll-proportion="0.3714789">
+          <caret line="185" column="52" selection-start-line="185" selection-start-column="0" selection-end-line="186" selection-end-column="0" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
           </folding>
