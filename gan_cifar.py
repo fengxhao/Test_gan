@@ -19,7 +19,7 @@ from ops import mmd
 # Download CIFAR-10 (Python version) at
 # https://www.cs.toronto.edu/~kriz/cifar.html and fill in the path to the
 # extracted files here!
-DATA_DIR = '/home/shen/fh/Test_gan/data/cifar-10'
+DATA_DIR = '/home/feng/ipyhthon/GAN_code/data/cifar-10'
 if len(DATA_DIR) == 0:
     raise Exception('Please specify path to data directory in gan_cifar.py!')
 
@@ -86,7 +86,7 @@ def Discriminator(inputs):
     output = tf.reshape(output, [-1, 4*4*4*DIM])
     output = lib.ops.linear.Linear('Discriminator.Output', 4*4*4*DIM, 1, output)
 
-    return tf.reshape(output, [-1])
+    return tf.reshape(output, [BATCH_SIZE,1])
 
 real_data_int = tf.placeholder(tf.int32, shape=[BATCH_SIZE, OUTPUT_DIM])
 real_data = 2*((tf.cast(real_data_int, tf.float32)/255.)-.5)
