@@ -200,7 +200,7 @@ def main(_):
                 all_samples = ((all_samples+1.)*(255./2)).astype('int32')
                 all_samples = all_samples.reshape((-1, 32, 32,3))
                 score = inception_score.get_inception_score(list(all_samples))
-                plot.plot("inception score:",score[0])
+                plot.plot("inception score_kernel",score[0])
 
             if i >0:
                 _genc,_ = sess.run([gen_cost,gen_train],feed_dict={X_image_int:data})
