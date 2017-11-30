@@ -8,7 +8,7 @@ flags = tf.app.flags
 
 flags.DEFINE_integer('input_height',32,'input image height')
 flags.DEFINE_integer("input_widht",32,'input image width')
-flags.DEFINE_integer("batch_size",49,'input batch size')
+flags.DEFINE_integer("batch_size",64,'input batch size')
 flags.DEFINE_integer("input_channel",3,'input channel size')
 flags.DEFINE_integer("out_height",32,'output height')
 flags.DEFINE_integer("out_width",32,'output width')
@@ -16,7 +16,7 @@ flags.DEFINE_integer("z_dim",128,'generator input dim')
 flags.DEFINE_integer("n_class",10,'number class')
 flags.DEFINE_integer("DIM",128,'Model dimensionality')
 flags.DEFINE_integer("Out_DIm",3072,"output_dim 32*32*3")
-flags.DEFINE_integer("iter_range",10000," iter range")
+flags.DEFINE_integer("iter_range",100000," iter range")
 flags.DEFINE_integer("disc_inter",5,"disc iter")
 flags.DEFINE_boolean("is_gp",True,"is gp")
 flags.DEFINE_boolean("is_fsr",False,"is feasible set reduction")
@@ -26,7 +26,7 @@ FLAGS = flags.FLAGS
 
 
 
-def Generator(z,labels=None,reuse=False,nums=49):
+def Generator(z,labels=None,reuse=False,nums=FLAGS.batch_size):
     with tf.variable_scope("Generator") as scope:
         if reuse:
             scope.reuse_variables()
@@ -84,7 +84,7 @@ def Discriminator(input,reuse=False):
 
     return tf.reshape(fc1, [-1])
 
-
+#data_dir = '/home/feng/ipyhthon/GAN_code/data/cifar-10'
 data_dir="/home/shen/fh/data/cifar10"
 train_data,dev_data= cifar10.load(FLAGS.batch_size,data_dir)
 
@@ -116,8 +116,8 @@ def main(_):
     fake_img= tf.reshape(G_imge,[-1,32,32,3])
     fake_img_rbg = tf.cast((fake_img+1.)*(255./2),tf.float32)
 
-    tf.summary.image("train/input image",imageRearrange(real_img_rbg,7))
-    tf.summary.image("train/gen image",imageRearrange(fake_img_rbg,7))
+    tf.summary.image("train/input image",imageRearrange(real_img_rbg,8))
+    tf.summary.image("train/gen image",imageRearrange(fake_img_rbg,8))
 
     disc_real = Discriminator(real_img)
     disc_fake = Discriminator(fake_img,True)
@@ -212,7 +212,7 @@ def main(_):
                 write.add_summary(summary_str,global_step=i)
                 image = sess.run(gen_save_image)
                 images_ = ((image+1.)*(255./2)).astype('int32')
-                save_images.save_images(images_.reshape((128, 32, 32, 3)), './save_cifar_image/samples_{}.jpg'.format(i))
+                save_images.save_images(images_.reshape((64, 32, 32, 3)), './save_cifar_image/samples_{}.jpg'.format(i))
 
             if i>-1:
                 D_real,D_fake = sess.run([disc_real,disc_fake],feed_dict={X_image_int:data})
