@@ -148,8 +148,8 @@ def get_inception_score():
 train_gen, dev_gen = lib.cifar10.load(BATCH_SIZE, data_dir=DATA_DIR)
 def inf_train_gen():
     while True:
-        for images,_ in train_gen():
-            yield images
+        for images,labels in train_gen():
+            yield images,labels
 
 # Train loop
 with tf.Session() as session:
@@ -163,7 +163,7 @@ with tf.Session() as session:
             _ = session.run(gen_train_op, feed_dict={real_data_int: _data})
         # Train critic
         for i in xrange(CRITIC_ITERS):
-            _data = gen.next()
+            _data,_label = gen.next()
             _disc_cost, _ = session.run([disc_cost, disc_train_op], feed_dict={real_data_int: _data})
 
         d_real,d_fake=session.run([disc_real,disc_fake],feed_dict={real_data_int:_data})

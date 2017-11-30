@@ -21,7 +21,7 @@ flags.DEFINE_boolean("is_l2",False,"is L2")
 flags.DEFINE_float("l2_regular",1,"l2 regularization")
 flags.DEFINE_integer("iter_range",10000," iter range")
 flags.DEFINE_integer("disc_inter",5,"disc iter")
-flags.DEFINE_boolean("is_gp",False,"is gp")
+flags.DEFINE_boolean("is_gp",True,"is gp")
 flags.DEFINE_boolean("is_fsr",False,"is feasible set reduction")
 flags.DEFINE_integer("lambda_reg",16,"is regularize fsr")
 FLAGS = flags.FLAGS
@@ -81,28 +81,34 @@ def Discriminator(input,reuse=False):
 
         out_put = tf.reshape(relu3,[-1,4*4*4*FLAGS.DIM])
 
-        fc1= tlib.fc(out_put,1,scope="fc1")
+        fc1_source = tlib.fc(out_put,1,scope="fc1")
 
-    return fc1
+        fc2_class = tlib.fc(out_put,FLAGS.n_class,scope="fc2")
+
+        n_class_ = tf.nn.softmax(fc2_class,name="class")
+
+    return fc1_source,fc2_class,n_class_
 
 train_data,dev_data,test_data= mnist.load(FLAGS.batch_size,FLAGS.batch_size)
 
 def inf_train_gen():
     while True:
         for images,targets in train_data():
-            yield images
+            yield images,targets
 
 
 def main(_):
     X_image = tf.placeholder(tf.float32,[FLAGS.batch_size,FLAGS.Out_DIm])
-    #y_label = tf.placeholder(tf.float32,[None,FLAGS.n_class])
-
+    y_label_index = tf.placeholder(tf.int32,[FLAGS.batch_size])
+    y_label = tf.one_hot(y_label_index,FLAGS.n_class)
     z=tf.random_normal([FLAGS.batch_size,FLAGS.z_dim])
-    G_image = Generator(z)
+    G_image = Generator(z,labels=y_label)
 
-    disc_real = Discriminator(X_image)
-    disc_fake = Discriminator(G_image,True)
+    disc_real,real_class,_class_r = Discriminator(X_image)
+    disc_fake,fake_class,_class_f = Discriminator(G_image,True)
 
+    class_label_real = tf.arg_max(_class_r,1)
+    class_label_fake =tf.arg_max(_class_f,1)
     gen_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope="Generator")
     disc_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope="Discriminator")
 
@@ -111,20 +117,31 @@ def main(_):
     if FLAGS.is_fsr:
         reduce_cost = tf.reduce_mean(disc_fake) -tf.reduce_mean(disc_real)
         FSR_cost = tf.nn.relu(reduce_cost)
-
     #******************************************
+    class_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=y_label,logits=real_class))
+    class_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=y_label,logits=fake_class))
+
     bandwidths = [2.0, 5.0, 10.0, 20.0, 40.0, 80.0]
     kernel_cost = mmd.mix_rbf_mmd2(disc_real,disc_fake,sigmas=bandwidths)
+    ind_t=tf.placeholder(tf.float32,[FLAGS.n_class])
+    con_kernel_cost =0
+    for i in range(FLAGS.n_class):
+        find_index = tf.where(tf.equal(y_label_index,i))
+        Image_c = tf.gather(disc_real[0],find_index)
+        Gimage_c = tf.gather(disc_fake[0],find_index)
+        con_kernel_cost+=mmd.mix_rbf_mmd2(Image_c,Gimage_c,sigmas=bandwidths,id=ind_t[i])
 
-    gen_cost  = kernel_cost
-    disc_cost = -1*kernel_cost
+    #gen_cost  = -tf.reduce_mean(disc_fake) + 10*(class_loss_fake)+con_kernel_cost
+    #disc_cost = tf.reduce_mean(disc_fake) - tf.reduce_mean(disc_real) + 10*(class_loss_fake+class_loss_real)+con_kernel_cost
+
+    gen_cost = kernel_cost+ 10*(class_loss_fake)+con_kernel_cost
+    disc_cost = -1*kernel_cost+10*(class_loss_fake+class_loss_real)+con_kernel_cost
 
     global_step = tf.Variable(0)
     learning_rate = tf.train.exponential_decay(1e-3,global_step,200,0.96,staircase=True)
 
     clip_ops = []
-    gp_cost=0
-    if FLAGS.is_clip :
+    if FLAGS.is_clip:
         clip_bound=[-.01, .01]
         for v in disc_params:
             clip_ops.append(tf.assign(v,tf.clip_by_value(v,clip_bound[0],clip_bound[1])))
@@ -142,15 +159,16 @@ def main(_):
         )
         differences = G_image - X_image
         interpolates = X_image + (alpha*differences)
-        gradients = tf.gradients(Discriminator(interpolates,reuse=True), [interpolates])[0]
+        source_logit,class_logit,_=Discriminator(interpolates,reuse=True)
+        gradients = tf.gradients(source_logit, [interpolates])[0]
         slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
         gradient_penalty = tf.reduce_mean((slopes-1.)**2)
-        gp_cost = 10*gradient_penalty
+        disc_cost += 10*gradient_penalty
 
-    #tf.add_to_collection("loss",disc_cost)
-    #dis_losses = tf.add_n(tf.get_collection_ref("loss"))
+    tf.add_to_collection("loss",disc_cost)
+    dis_losses = tf.add_n(tf.get_collection_ref("loss"))
 
-    dis_losses = disc_cost
+    #dis_losses = disc_cost
     gen_train = tf.train.AdamOptimizer(learning_rate, beta1=0.5,
         beta2=0.9).minimize(gen_cost,global_step=global_step,var_list=gen_params)
     disc_train = tf.train.AdamOptimizer(learning_rate,beta1=0.5,
@@ -158,38 +176,65 @@ def main(_):
 
     #tensor_noise = tf.random_normal([128,128])
     tensor_noise = tf.constant(np.random.normal(size=(128, 128)).astype('float32'))
-    gen_save_image = Generator(tensor_noise,reuse=True,nums=128)
+    #tensor_noise = tf.random_normal([128,128])
+    label =[1 for i in range(128)]
+    label_tensor = tf.one_hot(np.array(label),FLAGS.n_class)
+    gen_save_image = Generator(tensor_noise,label_tensor,reuse=True,nums=128)
+    _,_,class_gen_label = Discriminator(gen_save_image,reuse=True)
+    gen_label = tf.argmax(class_gen_label,1)
 
     #mnist_data  = input_data.read_data_sets("../data",one_hot=True)
-    with tf.Session() as sess:
-        sess.run(tf.initialize_all_variables())
+   # gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.333) 
+    config = tf.ConfigProto()  
+    config.gpu_options.allow_growth=True   
+    with tf.Session(config=config) as sess:
+        sess.run(tf.global_variables_initializer())
         gen = inf_train_gen()
         for i in xrange(FLAGS.iter_range):
             start_time = time.time()
             #data = mnist_data.train.next_batch(FLAGS.batch_size)
-            data = gen.next()
+            data_x,data_y = gen.next()
+            num_index=[]
+            for i in range(FLAGS.n_class):
+                num_index.append(len(np.where(data_y==i)[0]))
+            print np.shape(np.unique(data_y))[0]
             if i >0:
-                _genc,_ = sess.run([gen_cost,gen_train],feed_dict={X_image:data})
+                _genc,_ = sess.run([gen_cost,gen_train],feed_dict={X_image:data_x,y_label_index:data_y,ind_t:np.array(ind_t)})
 
             for x in xrange(FLAGS.disc_inter):
-                _disc,_ = sess.run([disc_cost,disc_train],feed_dict={X_image:data})
+                _disc,_class_real,_class_fake,_,con_cost = sess.run([disc_cost,class_loss_real,class_loss_fake,disc_train,con_kernel_cost],feed_dict={X_image:data_x,y_label_index:data_y,ind_t:np.array(ind_t)})
+
             if i>0:
-                D_real,D_fake = sess.run([disc_real,disc_fake],feed_dict={X_image:data})
                 #plot.plot("Generator_cost",_genc)
                 plot.plot("Discriminator",_disc)
-                plot.plot("D_real",np.mean(D_real))
-                plot.plot("D_fake",np.mean(D_fake))
-                #plot.plot("gp_cost:",gp_)
+                #plot.plot("class_real",_class_real)
+               # plot.plot("class_fake",_class_fake)
+                plot.plot("con_cost:",con_cost)
                 plot.plot('time', time.time() - start_time)
-
+            #if clip_ops is not None:
+            #    sess.run(clip_weight_clip)
 
             if i%100==99:
                 image = sess.run(gen_save_image)
                 save_images.save_images(image.reshape((128,28,28)),"./gen_image_{}.png".format(i))
+                gen_label_ = sess.run(gen_label)
                 val_dis_list=[]
+                #for n in xrange(20):
+                    #val_data= mnist_data.validation.next_batch(FLAGS.batch_size)
 
-                for images_,_ in dev_data():
-                    _dev_disc_cost=sess.run(disc_cost,feed_dict={X_image:images_})
+                    #_val_disc = sess.run(disc_cost,feed_dict={X_image:val_data[0],y_label:val_data[1]})
+                #    val_dis_list.append(_val_disc)
+                print "true_label:"
+                print data_y
+                print "class_real:"
+                print sess.run(class_label_real,feed_dict={X_image:data_x,y_label_index:data_y})
+                print "class_fake"
+                print sess.run(class_label_fake,feed_dict={X_image:data_x,y_label_index:data_y})
+                print "class_gen:"
+                print gen_label_
+                print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+                for images_,val_label in dev_data():
+                    _dev_disc_cost=sess.run(disc_cost,feed_dict={X_image:images_,y_label_index:val_label})
                     val_dis_list.append(_dev_disc_cost)
                 plot.plot("val_cost",np.mean(val_dis_list))
             if i<5 or i%100==99:
