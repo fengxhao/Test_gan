@@ -125,8 +125,6 @@ disc_params = lib.params_with_name('Discriminator')
 class_loss_real = tf.nn.softmax_cross_entropy_with_logits(logits=disc_real_logit,labels=real_label_onehot)
 class_loss_fake = tf.nn.softmax_cross_entropy_with_logits(logits=disc_fake_logit,labels=real_label_onehot)
 
-
-
 gen_cost = tf.reduce_mean(disc_fake)
 disc_cost = tf.reduce_mean(disc_real) - tf.reduce_mean(disc_fake)
 bandwidths = [2.0, 5.0, 10.0, 20.0, 40.0, 80.0]

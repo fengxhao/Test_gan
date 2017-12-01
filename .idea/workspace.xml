@@ -41,11 +41,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="ac_wgan.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="ac_wgan.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/ac_wgan.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="123" column="65" selection-start-line="123" selection-start-column="65" selection-end-line="123" selection-end-column="65" />
+            <state vertical-scroll-proportion="0.66">
+              <caret line="220" column="54" selection-start-line="220" selection-start-column="54" selection-end-line="220" selection-end-column="54" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
               </folding>
@@ -99,11 +99,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="gan_mnist.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="gan_mnist.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/gan_mnist.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.408">
-              <caret line="167" column="56" selection-start-line="167" selection-start-column="56" selection-end-line="167" selection-end-column="56" />
+            <state vertical-scroll-proportion="0.0">
+              <caret line="162" column="0" selection-start-line="162" selection-start-column="0" selection-end-line="163" selection-end-column="64" />
               <folding />
             </state>
           </provider>
@@ -138,7 +138,6 @@
         <option value="$PROJECT_DIR$/ops/mnist.py" />
         <option value="$PROJECT_DIR$/ac_gan.py" />
         <option value="$PROJECT_DIR$/Wgan.py" />
-        <option value="$PROJECT_DIR$/ac_wgan.py" />
         <option value="$PROJECT_DIR$/ac_info_wgan.py" />
         <option value="$PROJECT_DIR$/ops/tlib.py" />
         <option value="$PROJECT_DIR$/ops/save_images.py" />
@@ -152,6 +151,7 @@
         <option value="$PROJECT_DIR$/kernel_ac_wgan.py" />
         <option value="$PROJECT_DIR$/kernel_gan_cifar10.py" />
         <option value="$PROJECT_DIR$/gan_mnist.py" />
+        <option value="$PROJECT_DIR$/ac_wgan.py" />
       </list>
     </option>
   </component>
@@ -742,16 +742,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/ac_wgan.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="123" column="65" selection-start-line="123" selection-start-column="65" selection-end-line="123" selection-end-column="65" />
-          <folding>
-            <element signature="e#0#23#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Wgan.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.634106">
@@ -812,9 +802,19 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/gan_mnist.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.408">
-          <caret line="167" column="56" selection-start-line="167" selection-start-column="56" selection-end-line="167" selection-end-column="56" />
+        <state vertical-scroll-proportion="0.0">
+          <caret line="162" column="0" selection-start-line="162" selection-start-column="0" selection-end-line="163" selection-end-column="64" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ac_wgan.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.66">
+          <caret line="220" column="54" selection-start-line="220" selection-start-column="54" selection-end-line="220" selection-end-column="54" />
+          <folding>
+            <element signature="e#0#23#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

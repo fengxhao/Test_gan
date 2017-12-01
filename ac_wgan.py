@@ -152,21 +152,22 @@ def main(_):
         gradient_penalty = tf.reduce_mean((slopes-1.)**2)
         disc_cost += 10*gradient_penalty
 
-    tf.add_to_collection("loss",disc_cost)
-    dis_losses = tf.add_n(tf.get_collection_ref("loss"))
+    #tf.add_to_collection("loss",disc_cost)
+    #dis_losses = tf.add_n(tf.get_collection_ref("loss"))
 
     #dis_losses = disc_cost
     gen_train = tf.train.AdamOptimizer(learning_rate, beta1=0.5,
         beta2=0.9).minimize(gen_cost,global_step=global_step,var_list=gen_params)
     disc_train = tf.train.AdamOptimizer(learning_rate,beta1=0.5,
-        beta2=0.9).minimize(dis_losses,global_step=global_step,var_list=disc_params)
+        beta2=0.9).minimize(disc_cost,global_step=global_step,var_list=disc_params)
 
     #tensor_noise = tf.random_normal([128,128])
-    tensor_noise = tf.constant(np.random.normal(size=(128, 128)).astype('float32'))
+    tensor_noise = tf.constant(np.random.normal(size=(100, 128)).astype('float32'))
     #tensor_noise = tf.random_normal([128,128])
-    label =[1 for i in range(128)]
-    label_tensor = tf.one_hot(np.array(label),FLAGS.n_class)
-    gen_save_image = Generator(tensor_noise,label_tensor,reuse=True,nums=128)
+    fixed_labels = tf.constant(np.array([0,1,2,3,4,5,6,7,8,9]*10,dtype='int32'))
+    fix_label_onehot = tf.one_hot(tf.reshape(fixed_labels,[100]),10)
+    #label_tensor = tf.one_hot(np.array(label),FLAGS.n_class)
+    gen_save_image = Generator(tensor_noise,fix_label_onehot,reuse=True,nums=100)
     _,_,class_gen_label = Discriminator(gen_save_image,reuse=True)
     gen_label = tf.argmax(class_gen_label,1)
 
@@ -198,7 +199,7 @@ def main(_):
 
             if i%100==99:
                 image = sess.run(gen_save_image)
-                save_images.save_images(image.reshape((128,28,28)),"./gen_image_{}.png".format(i))
+                save_images.save_images(image.reshape((100,28,28)),"./ac_image_{}.png".format(i))
                 gen_label_ = sess.run(gen_label)
                 val_dis_list=[]
                 #for n in xrange(20):
