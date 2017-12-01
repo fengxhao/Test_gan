@@ -201,7 +201,8 @@ with tf.Session(config=config) as session:
             print session.run(class_fake,feed_dict={real_data:_data,real_label:_label})
             print "class_gen:"
             print  session.run(gen_label)
-            print ""
+            print "class_real:"
+            print _class_real
             lib.plot.plot('time', time.time() - start_time)
 
         # Calculate dev loss and generate samples every 100 iters
