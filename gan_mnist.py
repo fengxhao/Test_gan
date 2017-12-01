@@ -172,7 +172,7 @@ def generate_image(frame, true_dist):
     samples = session.run(fixed_noise_samples)
     lib.save_images.save_images(
         samples.reshape((100, 28, 28)),
-        './save_images/samples_{}.png'.format(frame)
+        './samples_{}.png'.format(frame)
     )
 
 # Dataset iterator
@@ -215,7 +215,9 @@ with tf.Session() as session:
             lib.plot.plot('D_real',np.mean(d_real))
             lib.plot.plot('D_fake',np.mean(d_fake))
         if iteration%100==99:
-            print "class_real:"
+            print "True label:"
+	    print _label	
+	    print "class_real:"
             print session.run(class_real,feed_dict={real_data:_data,real_label:_label})
             print "class_fake"
             print session.run(class_fake,feed_dict={real_data:_data,real_label:_label})
@@ -224,15 +226,15 @@ with tf.Session() as session:
             lib.plot.plot('time', time.time() - start_time)
 
         # Calculate dev loss and generate samples every 100 iters
-        if iteration % 100 == 99:
-            dev_disc_costs = []
-            for images,_ in dev_gen():
-                _dev_disc_cost = session.run(
-                    disc_cost, 
-                    feed_dict={real_data: images}
-                )
-                dev_disc_costs.append(_dev_disc_cost)
-            lib.plot.plot('dev disc cost', np.mean(dev_disc_costs))
+        #if iteration % 100 == 99:
+        #    dev_disc_costs = []
+        #    for images,_ in dev_gen():
+        #        _dev_disc_cost = session.run(
+        #            disc_cost, 
+        #            feed_dict={real_data: images}
+        #        )
+        #        dev_disc_costs.append(_dev_disc_cost)
+        #    lib.plot.plot('dev disc cost', np.mean(dev_disc_costs))
 
             generate_image(iteration, _data)
 
