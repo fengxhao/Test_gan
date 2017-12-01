@@ -32,8 +32,8 @@
       <file leaf-file-name="kernel_ac_wgan.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/kernel_ac_wgan.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="7.0277777">
-              <caret line="169" column="0" selection-start-line="169" selection-start-column="0" selection-end-line="169" selection-end-column="0" />
+            <state vertical-scroll-proportion="-4.3055553">
+              <caret line="85" column="62" selection-start-line="85" selection-start-column="62" selection-end-line="85" selection-end-column="62" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
               </folding>
@@ -103,7 +103,7 @@
         <entry file="file://$PROJECT_DIR$/gan_mnist.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.76527333">
-              <caret line="216" column="31" selection-start-line="216" selection-start-column="31" selection-end-line="216" selection-end-column="31" />
+              <caret line="111" column="30" selection-start-line="111" selection-start-column="30" selection-end-line="111" selection-end-column="30" />
               <folding />
             </state>
           </provider>
@@ -802,8 +802,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/kernel_ac_wgan.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="7.0277777">
-          <caret line="169" column="0" selection-start-line="169" selection-start-column="0" selection-end-line="169" selection-end-column="0" />
+        <state vertical-scroll-proportion="-4.3055553">
+          <caret line="85" column="62" selection-start-line="85" selection-start-column="62" selection-end-line="85" selection-end-column="62" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
           </folding>
@@ -813,7 +813,7 @@
     <entry file="file://$PROJECT_DIR$/gan_mnist.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.76527333">
-          <caret line="216" column="31" selection-start-line="216" selection-start-column="31" selection-end-line="216" selection-end-column="31" />
+          <caret line="111" column="30" selection-start-line="111" selection-start-column="30" selection-end-line="111" selection-end-column="30" />
           <folding />
         </state>
       </provider>

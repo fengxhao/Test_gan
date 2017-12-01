@@ -103,7 +103,7 @@ def Discriminator(inputs):
 
     out_logit = lib.ops.linear.Linear('Discriminator.logit',4*4*4*DIM,10,output)
 
-    n_class = tf.nn.softmax(out_logit,dim=10)
+    n_class = tf.nn.softmax(out_logit)
     return tf.reshape(output_1, [-1]),out_logit,n_class   #50
 
 real_data = tf.placeholder(tf.float32, shape=[BATCH_SIZE, OUTPUT_DIM])
@@ -210,10 +210,11 @@ with tf.Session() as session:
             )
             d_real,d_fake=session.run([disc_real,disc_fake],feed_dict={real_data:_data,real_label:_label})
             _disc,_class_real,_class_fake,con_cost,_gp_cost= session.run([disc_cost,class_loss_real,class_loss_fake,con_kernel_cost,gp_cost],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
-        if iteration%100==99:
+        if iteration>0:
             lib.plot.plot('train disc cost', _disc_cost)
             lib.plot.plot('D_real',np.mean(d_real))
             lib.plot.plot('D_fake',np.mean(d_fake))
+        if iteration%100==99:
             print "class_real:"
             print session.run(class_real,feed_dict={real_data:_data,real_label:_label})
             print "class_fake"
