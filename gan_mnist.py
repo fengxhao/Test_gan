@@ -154,8 +154,8 @@ gradient_penalty = tf.reduce_mean((slopes-1.)**2)
 gp_cost += LAMBDA*gradient_penalty
 
 
-gen_cost += class_loss_real+class_loss_fake
-disc_cost += gp_cost+class_loss_real+class_loss_fake
+gen_cost += 10*(class_loss_real+class_loss_fake)
+disc_cost += 10*(gp_cost+class_loss_real+class_loss_fake)
 
 gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(gen_cost, var_list=gen_params)
 disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(disc_cost, var_list=disc_params)
@@ -209,7 +209,8 @@ with tf.Session() as session:
                 feed_dict={real_data: _data,real_label:_label,ind_t:np.array(num_index)}
             )
             d_real,d_fake=session.run([disc_real,disc_fake],feed_dict={real_data:_data,real_label:_label})
-            _disc,_class_real,_class_fake,con_cost,_gp_cost= session.run([disc_cost,class_loss_real,class_loss_fake,con_kernel_cost,gp_cost],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
+            #_disc,_class_real,_class_fake,con_cost,_gp_cost= session.run([disc_cost,class_loss_real,class_loss_fake,con_kernel_cost,gp_cost],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
+            _disc,_class_real,_class_fake,_gp_cost= session.run([disc_cost,class_loss_real,class_loss_fake,gp_cost],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
         if iteration>0:
             lib.plot.plot('train disc cost', _disc_cost)
             lib.plot.plot('D_real',np.mean(d_real))
