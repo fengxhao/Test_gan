@@ -171,7 +171,7 @@ def inf_train_gen():
 config = tf.ConfigProto()
 config.gpu_options.allow_growth=True
 # Train loop
-with tf.Session() as session:
+with tf.Session(config=config) as session:
     session.run(tf.initialize_all_variables())
     gen = inf_train_gen()
     for iteration in xrange(ITERS):

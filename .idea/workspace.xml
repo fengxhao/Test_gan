@@ -2,21 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b52914ff-c7d4-464b-8ea7-149e46aaa8fa" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/samples_199.jpg" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/samples_299.jpg" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/samples_399.jpg" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/samples_499.jpg" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/samples_599.jpg" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/samples_99.jpg" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/D_fake.jpg" afterPath="$PROJECT_DIR$/D_fake.jpg" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/D_real.jpg" afterPath="$PROJECT_DIR$/D_real.jpg" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Discriminator.jpg" afterPath="$PROJECT_DIR$/Discriminator.jpg" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/time.jpg" afterPath="$PROJECT_DIR$/time.jpg" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/val_cost.jpg" afterPath="$PROJECT_DIR$/val_cost.jpg" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ac_wgan.py" afterPath="$PROJECT_DIR$/ac_wgan.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/gan_mnist.py" afterPath="$PROJECT_DIR$/gan_mnist.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/log.pkl" afterPath="$PROJECT_DIR$/log.pkl" />
     </list>
     <ignored path="AC_gan.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -82,8 +68,8 @@
       <file leaf-file-name="gan_mnist.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/gan_mnist.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.38139534">
-              <caret line="135" column="33" selection-start-line="135" selection-start-column="33" selection-end-line="135" selection-end-column="33" />
+            <state vertical-scroll-proportion="0.53953487">
+              <caret line="177" column="32" selection-start-line="177" selection-start-column="32" selection-end-line="177" selection-end-column="32" />
               <folding />
             </state>
           </provider>
@@ -811,8 +797,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/gan_mnist.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.38139534">
-          <caret line="135" column="33" selection-start-line="135" selection-start-column="33" selection-end-line="135" selection-end-column="33" />
+        <state vertical-scroll-proportion="0.53953487">
+          <caret line="177" column="32" selection-start-line="177" selection-start-column="32" selection-end-line="177" selection-end-column="32" />
           <folding />
         </state>
       </provider>
