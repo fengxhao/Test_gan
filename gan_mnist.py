@@ -108,6 +108,7 @@ def Discriminator(inputs):
 
 real_data = tf.placeholder(tf.float32, shape=[BATCH_SIZE, OUTPUT_DIM])
 real_label = tf.placeholder(tf.int32,shape=[BATCH_SIZE])
+
 real_label_onehot = tf.one_hot(real_label,10)
 
 fake_data = Generator(BATCH_SIZE,real_label_onehot)
@@ -190,17 +191,14 @@ with tf.Session() as session:
 
     for iteration in xrange(ITERS):
         start_time = time.time()
-
         if iteration > 0:
             _ = session.run(gen_train_op)
-
         if MODE == 'dcgan':
             disc_iters = 1
         else:
             disc_iters = CRITIC_ITERS
         for i in xrange(disc_iters):
             _data,_label = gen.next()
-
             num_index=[]
             for ind in range(10):
                 num_index.append(len(np.where(_label==ind)[0]))
@@ -208,22 +206,21 @@ with tf.Session() as session:
                 continue
             _disc_cost, _ = session.run(
                 [disc_cost, disc_train_op],
-                feed_dict={real_data: _data}
+                feed_dict={real_data: _data,real_label:_label}
             )
-
-        d_real,d_fake=session.run([disc_real,disc_fake],feed_dict={real_data:_data,real_label:_label})
-        _disc,_class_real,_class_fake,con_cost,_gp_cost= session.run([disc_cost,class_loss_real,class_loss_fake,con_kernel_cost,gp_cost],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
-
-        lib.plot.plot('train disc cost', _disc_cost)
-        lib.plot.plot('D_real',np.mean(d_real))
-        lib.plot.plot('D_fake',np.mean(d_fake))
-        print "class_real:"
-        print session.run(class_real,feed_dict={real_data:_data,real_label:_label})
-        print "class_fake"
-        print session.run(class_fake,feed_dict={real_data:_data,real_label:_label})
-        print "class_gen:"
-        print  session.run(gen_label)
-        lib.plot.plot('time', time.time() - start_time)
+            d_real,d_fake=session.run([disc_real,disc_fake],feed_dict={real_data:_data,real_label:_label})
+            _disc,_class_real,_class_fake,con_cost,_gp_cost= session.run([disc_cost,class_loss_real,class_loss_fake,con_kernel_cost,gp_cost],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
+        if iteration%100==99:
+            lib.plot.plot('train disc cost', _disc_cost)
+            lib.plot.plot('D_real',np.mean(d_real))
+            lib.plot.plot('D_fake',np.mean(d_fake))
+            print "class_real:"
+            print session.run(class_real,feed_dict={real_data:_data,real_label:_label})
+            print "class_fake"
+            print session.run(class_fake,feed_dict={real_data:_data,real_label:_label})
+            print "class_gen:"
+            print  session.run(gen_label)
+            lib.plot.plot('time', time.time() - start_time)
 
         # Calculate dev loss and generate samples every 100 iters
         if iteration % 100 == 99:
