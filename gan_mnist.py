@@ -170,7 +170,7 @@ def generate_image(frame, true_dist):
     samples = session.run(fixed_noise_samples)
     lib.save_images.save_images(
         samples.reshape((100, 28, 28)),
-        './samples_{}.png'.format(frame)
+        './samples_{}.jpg'.format(frame)
     )
 
 # Dataset iterator
@@ -179,44 +179,36 @@ def inf_train_gen():
     while True:
         for images,targets in train_gen():
             yield images,targets
-
 # Train loop
 with tf.Session() as session:
-
     session.run(tf.initialize_all_variables())
-
     gen = inf_train_gen()
-
     for iteration in xrange(ITERS):
         start_time = time.time()
+        _data,_label = gen.next()
+        num_index=[]
+        for ind in range(10):
+            num_index.append(len(np.where(_label==ind)[0]))
+        if  np.shape(np.unique(_label))[0]<10:
+            continue
         if iteration > 0:
             _ = session.run(gen_train_op,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
-        if MODE == 'dcgan':
-            disc_iters = 1
-        else:
-            disc_iters = CRITIC_ITERS
-        for i in xrange(disc_iters):
-            _data,_label = gen.next()
-            num_index=[]
-            for ind in range(10):
-                num_index.append(len(np.where(_label==ind)[0]))
-            if  np.shape(np.unique(_label))[0]<10:
-                continue
+        for i in xrange(CRITIC_ITERS):
             _disc_cost, _ = session.run(
                 [disc_cost, disc_train_op],
                 feed_dict={real_data: _data,real_label:_label,ind_t:np.array(num_index)}
             )
-            d_real,d_fake=session.run([disc_real,disc_fake],feed_dict={real_data:_data,real_label:_label})
+        d_real,d_fake=session.run([disc_real,disc_fake],feed_dict={real_data:_data,real_label:_label})
             #_disc,_class_real,_class_fake,con_cost,_gp_cost= session.run([disc_cost,class_loss_real,class_loss_fake,con_kernel_cost,gp_cost],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
-            _disc,_class_real,_class_fake,_gp_cost= session.run([disc_cost,class_loss_real,class_loss_fake,gp_cost],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
         if iteration>0:
             lib.plot.plot('train disc cost', _disc_cost)
             lib.plot.plot('D_real',np.mean(d_real))
             lib.plot.plot('D_fake',np.mean(d_fake))
         if iteration%100==99:
+            _class_real,_class_fake,_gp_cost= session.run([class_loss_real,class_loss_fake,gp_cost],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             print "True label:"
-	    print _label	
-	    print "class_real:"
+            print _label
+            print "class_real:"
             print session.run(class_real,feed_dict={real_data:_data,real_label:_label})
             print "class_fake"
             print session.run(class_fake,feed_dict={real_data:_data,real_label:_label})

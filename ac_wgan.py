@@ -95,8 +95,6 @@ def inf_train_gen():
     while True:
         for images,targets in train_data():
             yield images,targets
-
-
 def main(_):
     X_image = tf.placeholder(tf.float32,[None,FLAGS.Out_DIm])
     y_label_index = tf.placeholder(tf.int32,[None])
