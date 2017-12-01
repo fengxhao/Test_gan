@@ -127,18 +127,18 @@ class_loss_fake = tf.nn.softmax_cross_entropy_with_logits(logits=disc_fake_logit
 
 
 
-# gen_cost = tf.reduce_mean(disc_fake)
-# disc_cost = tf.reduce_mean(disc_real) - tf.reduce_mean(disc_fake)
+gen_cost = tf.reduce_mean(disc_fake)
+disc_cost = tf.reduce_mean(disc_real) - tf.reduce_mean(disc_fake)
 bandwidths = [2.0, 5.0, 10.0, 20.0, 40.0, 80.0]
 #kernel_cost = mmd.mix_rbf_mmd2(disc_real,disc_fake,sigmas=bandwidths,id=BATCH_SIZE)
 ind_t=tf.placeholder(tf.float32,[10])
 con_kernel_cost =0
 gp_cost =0
-for i in range(10):
-    find_index = tf.where(tf.equal(real_label_onehot,i))
-    Image_c = tf.gather(disc_real,find_index)
-    Gimage_c = tf.gather(disc_fake,find_index)
-    con_kernel_cost+=mmd.mix_rbf_mmd2(Image_c,Gimage_c,sigmas=bandwidths,id=ind_t[i])
+# for i in range(10):
+#     find_index = tf.where(tf.equal(real_label_onehot,i))
+#     Image_c = tf.gather(disc_real,find_index)
+#     Gimage_c = tf.gather(disc_fake,find_index)
+#     con_kernel_cost+=mmd.mix_rbf_mmd2(Image_c,Gimage_c,sigmas=bandwidths,id=ind_t[i])
 
 alpha = tf.random_uniform(
     shape=[BATCH_SIZE,1],
@@ -147,15 +147,15 @@ alpha = tf.random_uniform(
 )
 differences = fake_data - real_data
 interpolates = real_data + (alpha*differences)
-inter_img,_,_=Discriminator(interpolates)
+inter_img,a,b=Discriminator(interpolates)
 gradients = tf.gradients(inter_img, [interpolates])[0]
 slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
 gradient_penalty = tf.reduce_mean((slopes-1.)**2)
 gp_cost += LAMBDA*gradient_penalty
 
 
-gen_cost = con_kernel_cost+gp_cost +class_loss_real+class_loss_fake
-disc_cost = -1*con_kernel_cost+gp_cost+class_loss_real+class_loss_fake
+gen_cost += class_loss_real+class_loss_fake
+disc_cost += gp_cost+class_loss_real+class_loss_fake
 
 gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(gen_cost, var_list=gen_params)
 disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(disc_cost, var_list=disc_params)
