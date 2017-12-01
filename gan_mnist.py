@@ -192,7 +192,7 @@ with tf.Session() as session:
     for iteration in xrange(ITERS):
         start_time = time.time()
         if iteration > 0:
-            _ = session.run(gen_train_op)
+            _ = session.run(gen_train_op,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
         if MODE == 'dcgan':
             disc_iters = 1
         else:
@@ -206,7 +206,7 @@ with tf.Session() as session:
                 continue
             _disc_cost, _ = session.run(
                 [disc_cost, disc_train_op],
-                feed_dict={real_data: _data,real_label:_label}
+                feed_dict={real_data: _data,real_label:_label,ind_t:np.array(num_index)}
             )
             d_real,d_fake=session.run([disc_real,disc_fake],feed_dict={real_data:_data,real_label:_label})
             _disc,_class_real,_class_fake,con_cost,_gp_cost= session.run([disc_cost,class_loss_real,class_loss_fake,con_kernel_cost,gp_cost],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
