@@ -121,8 +121,8 @@ def main(_):
     class_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=y_label,logits=real_class))
     class_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=y_label,logits=fake_class))
 
-    gen_cost  = -tf.reduce_mean(disc_fake) + 20*(class_loss_fake)
-    disc_cost = tf.reduce_mean(disc_fake) - tf.reduce_mean(disc_real) + 20*(class_loss_fake+class_loss_real)
+    gen_cost  = -tf.reduce_mean(disc_fake) + 10*(class_loss_fake)
+    disc_cost = tf.reduce_mean(disc_fake) - tf.reduce_mean(disc_real) + 10*(class_loss_fake+class_loss_real)
 
     global_step = tf.Variable(0)
     learning_rate = tf.train.exponential_decay(1e-3,global_step,200,0.96,staircase=True)
@@ -156,9 +156,9 @@ def main(_):
     #dis_losses = tf.add_n(tf.get_collection_ref("loss"))
 
     #dis_losses = disc_cost
-    gen_train = tf.train.AdamOptimizer(learning_rate, beta1=0.5,
+    gen_train = tf.train.AdamOptimizer(1e-4, beta1=0.5,
         beta2=0.9).minimize(gen_cost,global_step=global_step,var_list=gen_params)
-    disc_train = tf.train.AdamOptimizer(learning_rate,beta1=0.5,
+    disc_train = tf.train.AdamOptimizer(1e-4,beta1=0.5,
         beta2=0.9).minimize(disc_cost,global_step=global_step,var_list=disc_params)
 
     #tensor_noise = tf.random_normal([128,128])
