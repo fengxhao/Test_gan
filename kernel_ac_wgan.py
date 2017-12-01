@@ -198,7 +198,7 @@ def main(_):
             for ind in range(FLAGS.n_class):
                 num_index.append(len(np.where(data_y==ind)[0]))
             if  np.shape(np.unique(data_y))[0]<10:
-		continue
+                continue
             if i >0:
                 _genc,_ = sess.run([gen_cost,gen_train],feed_dict={X_image:data_x,y_label_index:data_y,ind_t:np.array(num_index)})
 
@@ -210,10 +210,9 @@ def main(_):
                 plot.plot("class_real",_class_real)
                 plot.plot("class_fake",_class_fake)
                 plot.plot("con_cost:",con_cost)
-		plot.plot("kernel_cost:",_kernel)
+                plot.plot("kernel_cost:",_kernel)
                 plot.plot('time', time.time() - start_time)
-            #if clip_ops is not None:
-            #    sess.run(clip_weight_clip)
+
 
             if i%100==99:
                 image = sess.run(gen_save_image)
