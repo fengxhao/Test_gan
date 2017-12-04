@@ -21,7 +21,7 @@ import tflib.plot
 
 from ops import mmd
 
-MODE = 'wgan-gp' # dcgan, wgan, or wgan-gp
+MODE = 'wgan' # dcgan, wgan, or wgan-gp
 DIM = 64 # Model dimensionality
 BATCH_SIZE = 50 # Batch size
 CRITIC_ITERS = 5 # For WGAN and WGAN-GP, number of critic iters per gen iter
