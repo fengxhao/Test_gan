@@ -4,11 +4,8 @@
     <list default="true" id="b52914ff-c7d4-464b-8ea7-149e46aaa8fa" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/D_fake.jpg" afterPath="$PROJECT_DIR$/D_fake.jpg" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/D_real.jpg" afterPath="$PROJECT_DIR$/D_real.jpg" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Discriminator.jpg" afterPath="$PROJECT_DIR$/Discriminator.jpg" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/time.jpg" afterPath="$PROJECT_DIR$/time.jpg" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/val_cost.jpg" afterPath="$PROJECT_DIR$/val_cost.jpg" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Wgan.py" afterPath="$PROJECT_DIR$/Wgan.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ac_wgan.py" afterPath="$PROJECT_DIR$/ac_wgan.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/gan_mnist.py" afterPath="$PROJECT_DIR$/gan_mnist.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/log.pkl" afterPath="$PROJECT_DIR$/log.pkl" />
     </list>
     <ignored path="AC_gan.iws" />
@@ -83,8 +80,8 @@
       <file leaf-file-name="gan_mnist.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/gan_mnist.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.40638003">
-              <caret line="139" column="14" selection-start-line="139" selection-start-column="14" selection-end-line="139" selection-end-column="14" />
+            <state vertical-scroll-proportion="0.59500694">
+              <caret line="145" column="43" selection-start-line="145" selection-start-column="43" selection-end-line="145" selection-end-column="43" />
               <folding />
             </state>
           </provider>
@@ -121,9 +118,9 @@
         <option value="$PROJECT_DIR$/ops/mmd.py" />
         <option value="$PROJECT_DIR$/kernel_ac_wgan.py" />
         <option value="$PROJECT_DIR$/kernel_gan_cifar10.py" />
-        <option value="$PROJECT_DIR$/gan_mnist.py" />
         <option value="$PROJECT_DIR$/ac_wgan.py" />
         <option value="$PROJECT_DIR$/Wgan.py" />
+        <option value="$PROJECT_DIR$/gan_mnist.py" />
       </list>
     </option>
   </component>
@@ -505,7 +502,7 @@
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
-      <option name="time" value="25" />
+      <option name="time" value="26" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -857,8 +854,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/gan_mnist.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.40638003">
-          <caret line="139" column="14" selection-start-line="139" selection-start-column="14" selection-end-line="139" selection-end-column="14" />
+        <state vertical-scroll-proportion="0.59500694">
+          <caret line="145" column="43" selection-start-line="145" selection-start-column="43" selection-end-line="145" selection-end-column="43" />
           <folding />
         </state>
       </provider>
