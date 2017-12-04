@@ -21,10 +21,10 @@ import tflib.plot
 
 from ops import mmd
 
-MODE = 'wgan' # dcgan, wgan, or wgan-gp
+MODE = 'wgan-gp' # dcgan, wgan, or wgan-gp
 DIM = 64 # Model dimensionality
 BATCH_SIZE = 50 # Batch size
-CRITIC_ITERS = 5 # For WGAN and WGAN-GP, number of critic iters per gen iter
+CRITIC_ITERS = 1 # For WGAN and WGAN-GP, number of critic iters per gen iter
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
 ITERS = 200000 # How many generator iterations to train for 
 OUTPUT_DIM = 784 # Number of pixels in MNIST (28*28)
@@ -149,14 +149,14 @@ slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
 gradient_penalty = tf.reduce_mean((slopes-1.)**2)
 gp_cost+= 1*gradient_penalty
 
-gen_cost  = con_kernel_cost+1*(class_loss_real+class_loss_fake)
-disc_cost = -con_kernel_cost+1*(class_loss_real+class_loss_fake)+gp_cost
+gen_cost  = 10*con_kernel_cost+1*(class_loss_real+class_loss_fake)
+disc_cost = -10*con_kernel_cost+1*(class_loss_real+class_loss_fake)+gp_cost
 
 # gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(gen_cost, var_list=gen_params)
 # disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(disc_cost, var_list=disc_params)
 
-gen_train_op = tf.train.RMSPropOptimizer(learning_rate=1e-4).minimize(gen_cost, var_list=gen_params)
-disc_train_op = tf.train.RMSPropOptimizer(learning_rate=1e-4).minimize(disc_cost, var_list=disc_params)
+gen_train_op = tf.train.RMSPropOptimizer(learning_rate=5e-5).minimize(gen_cost, var_list=gen_params)
+disc_train_op = tf.train.RMSPropOptimizer(learning_rate=5e-5).minimize(disc_cost, var_list=disc_params)
 
 # For saving samples
 fixed_noise = tf.constant(np.random.normal(size=(100, 128)).astype('float32'))
@@ -205,11 +205,12 @@ with tf.Session(config=config) as session:
             num_index=[]
             for ind in range(10):
                 whlen = len(np.where(_label==ind)[0])
-                if whlen ==0:
-                    whlen=1
+                #if whlen ==0:
+                #    whlen=1
                 num_index.append(whlen)
             if  np.shape(np.unique(_label))[0]<10:
 	    	continue
+	    #print num_index
             _disc_cost, _ = session.run(
                 [disc_cost, disc_train_op],
                 feed_dict={real_data: _data,real_label:_label,ind_t:np.array(num_index)}
