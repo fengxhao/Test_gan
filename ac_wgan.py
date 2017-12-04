@@ -148,8 +148,8 @@ def main(_):
         gradients = tf.gradients(source_logit, [interpolates])[0]
         slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
         gradient_penalty = tf.reduce_mean((slopes-1.)**2)
-        disc_cost += 10*gradient_penalty
-
+        gp_cost = 10*gradient_penalty
+    disc_cost+=gp_cost
     #tf.add_to_collection("loss",disc_cost)
     #dis_losses = tf.add_n(tf.get_collection_ref("loss"))
 
@@ -213,6 +213,8 @@ def main(_):
                 print sess.run(class_label_fake,feed_dict={X_image:data_x,y_label_index:data_y})
                 print "class_gen:"
                 print gen_label_
+                print "gp_cost:"
+                print sess.run(gp_cost,feed_dict={X_image:data_x,y_label_index:data_y})
                 print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
                 for images_,val_label in dev_data():
                     _dev_disc_cost=sess.run(disc_cost,feed_dict={X_image:images_,y_label_index:val_label})

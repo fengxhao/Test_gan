@@ -142,11 +142,11 @@ def main(_):
         gradients = tf.gradients(Discriminator(interpolates,reuse=True), [interpolates])[0]
         slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
         gradient_penalty = tf.reduce_mean((slopes-1.)**2)
-        disc_cost += 10*gradient_penalty
+        gp_cost = 10*gradient_penalty
 
-    tf.add_to_collection("loss",disc_cost)
-    dis_losses = tf.add_n(tf.get_collection_ref("loss"))
-
+    #tf.add_to_collection("loss",disc_cost)
+    #dis_losses = tf.add_n(tf.get_collection_ref("loss"))
+    dis_losses =disc_cost+gp_cost
     #dis_losses = disc_cost
     gen_train = tf.train.AdamOptimizer(learning_rate, beta1=0.5,
         beta2=0.9).minimize(gen_cost,global_step=global_step,var_list=gen_params)
@@ -184,6 +184,9 @@ def main(_):
                 print "D:"
                 print D_real-D_fake
                 print "****************************************************"
+            if i%100==99:
+                print "gp_cost:"
+                print sess.run(gp_cost,feed_dict={X_image:data})
             if i%100==99:
                 image = sess.run(gen_save_image)
                 save_images.save_images(image.reshape((128,28,28)),"./gen_image_{}.png".format(i))
