@@ -136,26 +136,27 @@ for i in range(10):
     Gimage_c = tf.gather(disc_fake[0],find_index)
     con_kernel_cost+=mmd.mix_rbf_mmd2(Image_c,Gimage_c,sigmas=bandwidths,id=ind_t[i])
 
-   # alpha = tf.random_uniform(
-   #     shape=[ind_t[i],1],
-   #     minval=0.,
-   #     maxval=1.
-   # )
-   # fake_data_g= tf.gather(fake_data,find_index)
-   # real_data_g = tf.gather(real_data,find_index)
-   # differences = fake_data_g - real_data_g
-   # interpolates = real_data_g + (alpha*differences)
-   # inter_img,a,b=Discriminator(interpolates)
-   # gradients = tf.gradients(inter_img, [interpolates])[0]
-   # slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
-   # gradient_penalty = tf.reduce_mean((slopes-1.)**2)
-   # gp_cost+= 1*gradient_penalty
+alpha = tf.random_uniform(
+   shape=[BATCH_SIZE,1],
+   minval=0.,
+   maxval=1.
+)
+differences = fake_data - real_data
+interpolates = real_data + (alpha*differences)
+inter_img,a,b=Discriminator(interpolates)
+gradients = tf.gradients(inter_img, [interpolates])[0]
+slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
+gradient_penalty = tf.reduce_mean((slopes-1.)**2)
+gp_cost+= 1*gradient_penalty
 
 gen_cost  = con_kernel_cost+1*(class_loss_real+class_loss_fake)
 disc_cost = -con_kernel_cost+1*(class_loss_real+class_loss_fake)+gp_cost
 
-gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(gen_cost, var_list=gen_params)
-disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(disc_cost, var_list=disc_params)
+# gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(gen_cost, var_list=gen_params)
+# disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(disc_cost, var_list=disc_params)
+
+gen_train_op = tf.train.RMSPropOptimizer(learning_rate=1e-4).minimize(gen_cost, var_list=gen_params)
+disc_train_op = tf.train.RMSPropOptimizer(learning_rate=1e-4).minimize(disc_cost, var_list=disc_params)
 
 # For saving samples
 fixed_noise = tf.constant(np.random.normal(size=(100, 128)).astype('float32'))
