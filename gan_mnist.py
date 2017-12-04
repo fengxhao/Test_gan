@@ -98,13 +98,13 @@ def Discriminator(inputs):
         output = lib.ops.batchnorm.Batchnorm('Discriminator.BN3', [0,2,3], output)
     output = LeakyReLU(output)
 
-    output = tf.reshape(output, [-1, 4*4*4*DIM]) # 50* (4*4*4*128)
+    output = tf.reshape(output, [-1, 4*4*4*DIM]) # 50* (4*4*4*64)
     output_1 = lib.ops.linear.Linear('Discriminator.Output', 4*4*4*DIM, 1, output) #50*1
 
     out_logit = lib.ops.linear.Linear('Discriminator.logit',4*4*4*DIM,10,output)
 
     n_class = tf.nn.softmax(out_logit)
-    return tf.reshape(output_1, [-1]),out_logit,n_class   #50
+    return output_1,out_logit,n_class   #50
 
 real_data = tf.placeholder(tf.float32, shape=[BATCH_SIZE, OUTPUT_DIM])
 real_label = tf.placeholder(tf.int32,shape=[BATCH_SIZE])
@@ -123,9 +123,12 @@ gen_params = lib.params_with_name('Generator')
 disc_params = lib.params_with_name('Discriminator')
 
 class_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=real_label_onehot,logits=disc_real_logit))
-class_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=real_label_onehot,logits=disc_real_logit))
+class_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=real_label_onehot,logits=disc_fake_logit))
 
-gp_cost =0
+gen_cost = -tf.reduce_mean(disc_fake) +10*(class_loss_real+class_loss_fake)
+disc_cost = tf.reduce_mean(disc_fake) - tf.reduce_mean(disc_real)+10*(class_loss_real+class_loss_fake)
+
+
 
 alpha = tf.random_uniform(
     shape=[BATCH_SIZE,1],
@@ -138,10 +141,8 @@ inter_img,a,b=Discriminator(interpolates)
 gradients = tf.gradients(inter_img, [interpolates])[0]
 slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
 gradient_penalty = tf.reduce_mean((slopes-1.)**2)
-gp_cost += LAMBDA*gradient_penalty
+disc_cost += LAMBDA*gradient_penalty
 
-gen_cost = tf.reduce_mean(disc_fake)+10*(class_loss_real+class_loss_fake)
-disc_cost = tf.reduce_mean(disc_real) - tf.reduce_mean(disc_fake)+10*(gp_cost+class_loss_real+class_loss_fake)
 
 gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(gen_cost, var_list=gen_params)
 disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(disc_cost, var_list=disc_params)
@@ -192,7 +193,7 @@ with tf.Session(config=config) as session:
             lib.plot.plot('D_real',np.mean(d_real))
             lib.plot.plot('D_fake',np.mean(d_fake))
         if iteration%100==99:
-            _class_real,_class_fake,_gp_cost= session.run([class_loss_real,class_loss_fake,gp_cost],feed_dict={real_data:_data,real_label:_label})
+            _class_real,_class_fake= session.run([class_loss_real,class_loss_fake],feed_dict={real_data:_data,real_label:_label})
             print "True label:"
             print _label
             print "class_real:"
@@ -201,8 +202,8 @@ with tf.Session(config=config) as session:
             print session.run(class_fake,feed_dict={real_data:_data,real_label:_label})
             print "class_gen:"
             print  session.run(gen_label)
-            print "class_real:"
-            print _class_real
+            print "_class_fake:"
+            print _class_fake
             lib.plot.plot('time', time.time() - start_time)
 
         # Calculate dev loss and generate samples every 100 iters
