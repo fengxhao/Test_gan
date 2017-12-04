@@ -21,7 +21,7 @@ import tflib.plot
 
 from ops import mmd
 
-MODE = 'wgan-gp' # dcgan, wgan, or wgan-gp
+MODE = 'wgan' # dcgan, wgan, or wgan-gp
 DIM = 64 # Model dimensionality
 BATCH_SIZE = 50 # Batch size
 CRITIC_ITERS = 5 # For WGAN and WGAN-GP, number of critic iters per gen iter
@@ -197,7 +197,7 @@ with tf.Session(config=config) as session:
             num_index.append(whlen)
         if  np.shape(np.unique(_label))[0]<10:
             continue
-
+        print num_index
         if iteration > 0:
             _ = session.run(gen_train_op,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
         for i in xrange(CRITIC_ITERS):
@@ -205,11 +205,10 @@ with tf.Session(config=config) as session:
             num_index=[]
             for ind in range(10):
                 whlen = len(np.where(_label==ind)[0])
-                if whlen ==0:
-                    whlen=1
                 num_index.append(whlen)
             if  np.shape(np.unique(_label))[0]<10:
-	    	continue
+                continue
+            print num_index
             _disc_cost, _ = session.run(
                 [disc_cost, disc_train_op],
                 feed_dict={real_data: _data,real_label:_label,ind_t:np.array(num_index)}
