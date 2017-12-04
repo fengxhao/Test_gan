@@ -98,13 +98,13 @@ def Discriminator(inputs):
         output = lib.ops.batchnorm.Batchnorm('Discriminator.BN3', [0,2,3], output)
     output = LeakyReLU(output)
 
-    output = tf.reshape(output, [-1, 4*4*4*DIM]) # 50* (4*4*4*128)
+    output = tf.reshape(output, [-1, 4*4*4*DIM]) # 50* (4*4*4*64)
     output_1 = lib.ops.linear.Linear('Discriminator.Output', 4*4*4*DIM, 1, output) #50*1
 
     out_logit = lib.ops.linear.Linear('Discriminator.logit',4*4*4*DIM,10,output)
 
     n_class = tf.nn.softmax(out_logit)
-    return tf.reshape(output_1, [-1]),out_logit,n_class   #50
+    return output_1,out_logit,n_class   #50
 
 real_data = tf.placeholder(tf.float32, shape=[BATCH_SIZE, OUTPUT_DIM])
 real_label = tf.placeholder(tf.int32,shape=[BATCH_SIZE])
@@ -123,9 +123,17 @@ gen_params = lib.params_with_name('Generator')
 disc_params = lib.params_with_name('Discriminator')
 
 class_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=real_label_onehot,logits=disc_real_logit))
-class_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=real_label_onehot,logits=disc_real_logit))
+class_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=real_label_onehot,logits=disc_fake_logit))
 
-gp_cost =0
+bandwidths = [2.0, 5.0, 10.0, 20.0, 40.0, 80.0]
+kernel_cost = mmd.mix_rbf_mmd2(disc_real,disc_fake,sigmas=bandwidths,id=BATCH_SIZE)
+ind_t=tf.placeholder(tf.float32,[10])
+con_kernel_cost =0
+for i in range(10):
+    find_index = tf.where(tf.equal(real_label,i))
+    Image_c = tf.gather(disc_real[0],find_index)
+    Gimage_c = tf.gather(disc_fake[0],find_index)
+    con_kernel_cost+=mmd.mix_rbf_mmd2(Image_c,Gimage_c,sigmas=bandwidths,id=ind_t[i])
 
 alpha = tf.random_uniform(
     shape=[BATCH_SIZE,1],
@@ -138,10 +146,10 @@ inter_img,a,b=Discriminator(interpolates)
 gradients = tf.gradients(inter_img, [interpolates])[0]
 slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
 gradient_penalty = tf.reduce_mean((slopes-1.)**2)
-gp_cost += LAMBDA*gradient_penalty
+gp_cost= LAMBDA*gradient_penalty
 
-gen_cost = tf.reduce_mean(disc_fake)+10*(class_loss_real+class_loss_fake)
-disc_cost = tf.reduce_mean(disc_real) - tf.reduce_mean(disc_fake)+gp_cost+10*(class_loss_real+class_loss_fake)
+gen_cost  = con_kernel_cost+1*(class_loss_real+class_loss_fake)
+disc_cost = -con_kernel_cost+1*(class_loss_real+class_loss_fake)+gp_cost
 
 gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(gen_cost, var_list=gen_params)
 disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(disc_cost, var_list=disc_params)
@@ -158,7 +166,7 @@ def generate_image(frame, true_dist):
     samples = session.run(fixed_noise_samples)
     lib.save_images.save_images(
         samples.reshape((100, 28, 28)),
-        './samples_{}.jpg'.format(frame)
+        './con_cifar_image/samples_{}.jpg'.format(frame)
     )
 
 # Dataset iterator
@@ -177,32 +185,51 @@ with tf.Session(config=config) as session:
     for iteration in xrange(ITERS):
         start_time = time.time()
         _data,_label = gen.next()
+        num_index=[]
+        for ind in range(10):
+            whlen = len(np.where(_label==ind)[0])
+            if whlen ==0:
+                whlen=1
+            num_index.append(whlen)
+        #if  np.shape(np.unique(_label))[0]<10:
+        #    continue
+
         if iteration > 0:
-            _ = session.run(gen_train_op,feed_dict={real_data:_data,real_label:_label})
+            _ = session.run(gen_train_op,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
         for i in xrange(CRITIC_ITERS):
             _data,_label = gen.next()
+            num_index=[]
+            for ind in range(10):
+                whlen = len(np.where(_label==ind)[0])
+                if whlen ==0:
+                    whlen=1
+                num_index.append(whlen)
             _disc_cost, _ = session.run(
                 [disc_cost, disc_train_op],
-                feed_dict={real_data: _data,real_label:_label}
+                feed_dict={real_data: _data,real_label:_label,ind_t:np.array(num_index)}
             )
-        d_real,d_fake=session.run([disc_real,disc_fake],feed_dict={real_data:_data,real_label:_label})
+        d_real,d_fake=session.run([disc_real,disc_fake],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             #_disc,_class_real,_class_fake,con_cost,_gp_cost= session.run([disc_cost,class_loss_real,class_loss_fake,con_kernel_cost,gp_cost],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
         if iteration>0:
             lib.plot.plot('train disc cost', _disc_cost)
             lib.plot.plot('D_real',np.mean(d_real))
             lib.plot.plot('D_fake',np.mean(d_fake))
         if iteration%100==99:
-            _class_real,_class_fake,_gp_cost= session.run([class_loss_real,class_loss_fake,gp_cost],feed_dict={real_data:_data,real_label:_label})
+            _class_real,_class_fake= session.run([class_loss_real,class_loss_fake],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             print "True label:"
             print _label
             print "class_real:"
-            print session.run(class_real,feed_dict={real_data:_data,real_label:_label})
+            print session.run(class_real,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             print "class_fake"
-            print session.run(class_fake,feed_dict={real_data:_data,real_label:_label})
+            print session.run(class_fake,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             print "class_gen:"
             print  session.run(gen_label)
-            print "class_real:"
-            print _class_real
+            print "_class_fake:"
+            print _class_fake
+            print "total_kernel_loss:"
+            print session.run(kernel_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
+            print "con_kernel_loss:"
+            print session.run(con_kernel_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             lib.plot.plot('time', time.time() - start_time)
 
         # Calculate dev loss and generate samples every 100 iters
