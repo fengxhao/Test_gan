@@ -127,26 +127,29 @@ class_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=
 
 bandwidths = [2.0, 5.0, 10.0, 20.0, 40.0, 80.0]
 kernel_cost = mmd.mix_rbf_mmd2(disc_real,disc_fake,sigmas=bandwidths,id=BATCH_SIZE)
-ind_t=tf.placeholder(tf.float32,[10])
+ind_t=tf.placeholder(tf.int32,[10])
 con_kernel_cost =0
+gp_cost =0
 for i in range(10):
     find_index = tf.where(tf.equal(real_label,i))
     Image_c = tf.gather(disc_real[0],find_index)
     Gimage_c = tf.gather(disc_fake[0],find_index)
     con_kernel_cost+=mmd.mix_rbf_mmd2(Image_c,Gimage_c,sigmas=bandwidths,id=ind_t[i])
 
-alpha = tf.random_uniform(
-    shape=[BATCH_SIZE,1],
-    minval=0.,
-    maxval=1.
-)
-differences = fake_data - real_data
-interpolates = real_data + (alpha*differences)
-inter_img,a,b=Discriminator(interpolates)
-gradients = tf.gradients(inter_img, [interpolates])[0]
-slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
-gradient_penalty = tf.reduce_mean((slopes-1.)**2)
-gp_cost= LAMBDA*gradient_penalty
+   # alpha = tf.random_uniform(
+   #     shape=[ind_t[i],1],
+   #     minval=0.,
+   #     maxval=1.
+   # )
+   # fake_data_g= tf.gather(fake_data,find_index)
+   # real_data_g = tf.gather(real_data,find_index)
+   # differences = fake_data_g - real_data_g
+   # interpolates = real_data_g + (alpha*differences)
+   # inter_img,a,b=Discriminator(interpolates)
+   # gradients = tf.gradients(inter_img, [interpolates])[0]
+   # slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
+   # gradient_penalty = tf.reduce_mean((slopes-1.)**2)
+   # gp_cost+= 1*gradient_penalty
 
 gen_cost  = con_kernel_cost+1*(class_loss_real+class_loss_fake)
 disc_cost = -con_kernel_cost+1*(class_loss_real+class_loss_fake)+gp_cost
@@ -188,11 +191,11 @@ with tf.Session(config=config) as session:
         num_index=[]
         for ind in range(10):
             whlen = len(np.where(_label==ind)[0])
-            if whlen ==0:
-                whlen=1
+            #if whlen ==0:
+            #    whlen=1
             num_index.append(whlen)
-        #if  np.shape(np.unique(_label))[0]<10:
-        #    continue
+        if  np.shape(np.unique(_label))[0]<10:
+            continue
 
         if iteration > 0:
             _ = session.run(gen_train_op,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
@@ -204,6 +207,8 @@ with tf.Session(config=config) as session:
                 if whlen ==0:
                     whlen=1
                 num_index.append(whlen)
+            if  np.shape(np.unique(_label))[0]<10:
+	    	continue
             _disc_cost, _ = session.run(
                 [disc_cost, disc_train_op],
                 feed_dict={real_data: _data,real_label:_label,ind_t:np.array(num_index)}
@@ -230,6 +235,8 @@ with tf.Session(config=config) as session:
             print session.run(kernel_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             print "con_kernel_loss:"
             print session.run(con_kernel_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
+            #print "gp_loss:"
+            #print session.run(gp_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             lib.plot.plot('time', time.time() - start_time)
 
         # Calculate dev loss and generate samples every 100 iters
