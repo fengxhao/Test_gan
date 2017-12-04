@@ -114,8 +114,8 @@ def main(_):
 
     #******************************************
 
-    gen_cost  = -tf.reduce_mean(disc_fake) + FLAGS.lambda_reg * FSR_cost
-    disc_cost = tf.reduce_mean(disc_fake) - tf.reduce_mean(disc_real) + FLAGS.lambda_reg*FSR_cost
+    gen_cost  = -tf.reduce_mean(disc_fake)
+    disc_cost = tf.reduce_mean(disc_fake) - tf.reduce_mean(disc_real)
 
     global_step = tf.Variable(0)
     learning_rate = tf.train.exponential_decay(1e-3,global_step,200,0.96,staircase=True)
@@ -179,7 +179,11 @@ def main(_):
                 plot.plot('time', time.time() - start_time)
             #if clip_ops is not None:
             #    sess.run(clip_weight_clip)
-
+            if i%1000==999:
+                print "***************************************************"
+                print "D:"
+                print D_real-D_fake
+                print "****************************************************"
             if i%100==99:
                 image = sess.run(gen_save_image)
                 save_images.save_images(image.reshape((128,28,28)),"./gen_image_{}.png".format(i))
