@@ -24,7 +24,7 @@ from ops import mmd
 MODE = 'wgan-gp' # dcgan, wgan, or wgan-gp
 DIM = 64 # Model dimensionality
 BATCH_SIZE = 50 # Batch size
-CRITIC_ITERS = 1 # For WGAN and WGAN-GP, number of critic iters per gen iter
+CRITIC_ITERS = 5 # For WGAN and WGAN-GP, number of critic iters per gen iter
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
 ITERS = 200000 # How many generator iterations to train for 
 OUTPUT_DIM = 784 # Number of pixels in MNIST (28*28)
@@ -127,62 +127,67 @@ class_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=
 bandwidths = [2.0, 5.0, 10.0, 20.0, 40.0, 80.0]
 kernel_cost = mmd.mix_rbf_mmd2(disc_real,disc_fake,sigmas=bandwidths,id=BATCH_SIZE)
 ind_t=tf.placeholder(tf.int32,[10])
-# for i in range(10):
-#     find_index = tf.where(tf.equal(real_label,i))
-#     Image_c = tf.gather(disc_real[0],find_index)
-#     Gimage_c = tf.gather(disc_fake[0],find_index)
-#     con_kernel_cost+=mmd.mix_rbf_mmd2(Image_c,Gimage_c,sigmas=bandwidths,id=ind_t[i])
+con_kernel_cost=0
+for i in range(10):
+    find_index = tf.where(tf.equal(real_label,i))
+    Image_c = tf.gather(disc_real[0],find_index)
+    Gimage_c = tf.gather(disc_fake[0],find_index)
+    Image_c_s = tf.reshape(Image_c,[-1,1])
+    Gimage_c_s = tf.reshape(Gimage_c,[-1,1])
+    con_kernel_cost+=mmd.mix_rbf_mmd2(Image_c_s,Gimage_c_s,sigmas=bandwidths,id=ind_t[i])
 
-find_index_0 = tf.where(tf.equal(real_label,0))
-Image_c_0 = tf.gather(disc_real[0],find_index_0)
-Gimage_c_0 = tf.gather(disc_fake[0],find_index_0)
-con_kernel_cost_0=mmd.mix_rbf_mmd2(Image_c_0,Gimage_c_0,sigmas=bandwidths,id=ind_t[0])
+# find_index_0 = tf.where(tf.equal(real_label,0))
+# Image_c_0 = tf.gather(disc_real,find_index_0)
+# Gimage_c_0 = tf.gather(disc_fake,find_index_0)
+# Ima0 = tf.reshape(Image_c_0,[-1,1])
+# Gimg0= tf.reshape(Gimage_c_0,[-1,1])
+# con_kernel_cost_0=mmd.mix_rbf_mmd2(Ima0,Gimg0,sigmas=bandwidths,id=ind_t[0])
 
-find_index_1 = tf.where(tf.equal(real_label,1))
-Image_c_1 = tf.gather(disc_real[0],find_index_1)
-Gimage_c_1 = tf.gather(disc_fake[0],find_index_1)
-con_kernel_cost_1=mmd.mix_rbf_mmd2(Image_c_1,Gimage_c_1,sigmas=bandwidths,id=ind_t[1])
-
-
-find_index_2 = tf.where(tf.equal(real_label,2))
-Image_c_2 = tf.gather(disc_real[0],find_index_2)
-Gimage_c_2 = tf.gather(disc_fake[0],find_index_2)
-con_kernel_cost_2=mmd.mix_rbf_mmd2(Image_c_2,Gimage_c_2,sigmas=bandwidths,id=ind_t[2])
-
-find_index_3 = tf.where(tf.equal(real_label,3))
-Image_c_3 = tf.gather(disc_real[0],find_index_3)
-Gimage_c_3 = tf.gather(disc_fake[0],find_index_3)
-con_kernel_cost_3=mmd.mix_rbf_mmd2(Image_c_3,Gimage_c_3,sigmas=bandwidths,id=ind_t[3])
-
-find_index_4 = tf.where(tf.equal(real_label,4))
-Image_c_4 = tf.gather(disc_real[0],find_index_4)
-Gimage_c_4 = tf.gather(disc_fake[0],find_index_4)
-con_kernel_cost_4=mmd.mix_rbf_mmd2(Image_c_4,Gimage_c_4,sigmas=bandwidths,id=ind_t[4])
-
-find_index_5 = tf.where(tf.equal(real_label,5))
-Image_c_5 = tf.gather(disc_real[0],find_index_5)
-Gimage_c_5 = tf.gather(disc_fake[0],find_index_5)
-con_kernel_cost_5=mmd.mix_rbf_mmd2(Image_c_5,Gimage_c_5,sigmas=bandwidths,id=ind_t[5])
-
-find_index_6 = tf.where(tf.equal(real_label,6))
-Image_c_6 = tf.gather(disc_real[0],find_index_6)
-Gimage_c_6 = tf.gather(disc_fake[0],find_index_6)
-con_kernel_cost_6=mmd.mix_rbf_mmd2(Image_c_6,Gimage_c_6,sigmas=bandwidths,id=ind_t[6])
-
-find_index_7 = tf.where(tf.equal(real_label,7))
-Image_c_7 = tf.gather(disc_real[0],find_index_7)
-Gimage_c_7 = tf.gather(disc_fake[0],find_index_7)
-con_kernel_cost_7=mmd.mix_rbf_mmd2(Image_c_7,Gimage_c_7,sigmas=bandwidths,id=ind_t[7])
-
-find_index_8 = tf.where(tf.equal(real_label,8))
-Image_c_8 = tf.gather(disc_real[0],find_index_8)
-Gimage_c_8 = tf.gather(disc_fake[0],find_index_8)
-con_kernel_cost_8=mmd.mix_rbf_mmd2(Image_c_8,Gimage_c_8,sigmas=bandwidths,id=ind_t[8])
-
-find_index_9 = tf.where(tf.equal(real_label,9))
-Image_c_9 = tf.gather(disc_real[0],find_index_9)
-Gimage_c_9 = tf.gather(disc_fake[0],find_index_9)
-con_kernel_cost_9=mmd.mix_rbf_mmd2(Image_c_9,Gimage_c_9,sigmas=bandwidths,id=ind_t[9])
+# find_index_1 = tf.where(tf.equal(real_label,1))
+# Image_c_1 = tf.gather(disc_real[0],find_index_1)
+# Gimage_c_1 = tf.gather(disc_fake[0],find_index_1)
+# con_kernel_cost_1=mmd.mix_rbf_mmd2(Image_c_1,Gimage_c_1,sigmas=bandwidths,id=ind_t[1])
+#
+#
+# find_index_2 = tf.where(tf.equal(real_label,2))
+# Image_c_2 = tf.gather(disc_real[0],find_index_2)
+# Gimage_c_2 = tf.gather(disc_fake[0],find_index_2)
+# con_kernel_cost_2=mmd.mix_rbf_mmd2(Image_c_2,Gimage_c_2,sigmas=bandwidths,id=ind_t[2])
+#
+# find_index_3 = tf.where(tf.equal(real_label,3))
+# Image_c_3 = tf.gather(disc_real[0],find_index_3)
+# Gimage_c_3 = tf.gather(disc_fake[0],find_index_3)
+# con_kernel_cost_3=mmd.mix_rbf_mmd2(Image_c_3,Gimage_c_3,sigmas=bandwidths,id=ind_t[3])
+#
+# find_index_4 = tf.where(tf.equal(real_label,4))
+# Image_c_4 = tf.gather(disc_real[0],find_index_4)
+# Gimage_c_4 = tf.gather(disc_fake[0],find_index_4)
+# con_kernel_cost_4=mmd.mix_rbf_mmd2(Image_c_4,Gimage_c_4,sigmas=bandwidths,id=ind_t[4])
+#
+# find_index_5 = tf.where(tf.equal(real_label,5))
+# Image_c_5 = tf.gather(disc_real[0],find_index_5)
+# Gimage_c_5 = tf.gather(disc_fake[0],find_index_5)
+# con_kernel_cost_5=mmd.mix_rbf_mmd2(Image_c_5,Gimage_c_5,sigmas=bandwidths,id=ind_t[5])
+#
+# find_index_6 = tf.where(tf.equal(real_label,6))
+# Image_c_6 = tf.gather(disc_real[0],find_index_6)
+# Gimage_c_6 = tf.gather(disc_fake[0],find_index_6)
+# con_kernel_cost_6=mmd.mix_rbf_mmd2(Image_c_6,Gimage_c_6,sigmas=bandwidths,id=ind_t[6])
+#
+# find_index_7 = tf.where(tf.equal(real_label,7))
+# Image_c_7 = tf.gather(disc_real[0],find_index_7)
+# Gimage_c_7 = tf.gather(disc_fake[0],find_index_7)
+# con_kernel_cost_7=mmd.mix_rbf_mmd2(Image_c_7,Gimage_c_7,sigmas=bandwidths,id=ind_t[7])
+#
+# find_index_8 = tf.where(tf.equal(real_label,8))
+# Image_c_8 = tf.gather(disc_real[0],find_index_8)
+# Gimage_c_8 = tf.gather(disc_fake[0],find_index_8)
+# con_kernel_cost_8=mmd.mix_rbf_mmd2(Image_c_8,Gimage_c_8,sigmas=bandwidths,id=ind_t[8])
+#
+# find_index_9 = tf.where(tf.equal(real_label,9))
+# Image_c_9 = tf.gather(disc_real[0],find_index_9)
+# Gimage_c_9 = tf.gather(disc_fake[0],find_index_9)
+# con_kernel_cost_9=mmd.mix_rbf_mmd2(Image_c_9,Gimage_c_9,sigmas=bandwidths,id=ind_t[9])
 
 alpha = tf.random_uniform(
    shape=[BATCH_SIZE,1],
@@ -197,11 +202,8 @@ slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
 gradient_penalty = tf.reduce_mean((slopes-1.)**2)
 gp_cost= 1*gradient_penalty
 
-con_kernel_cost=con_kernel_cost_0+con_kernel_cost_1+con_kernel_cost_2+con_kernel_cost_3+con_kernel_cost_4+con_kernel_cost_5+con_kernel_cost_6+con_kernel_cost_6+con_kernel_cost_7+con_kernel_cost_8+con_kernel_cost_9
-
-
 gen_cost  = con_kernel_cost+1*(class_loss_real+class_loss_fake)
-disc_cost = -1*(kernel_cost)+1*(class_loss_real+class_loss_fake)+gp_cost
+disc_cost = -1*(con_kernel_cost)+1*(class_loss_real+class_loss_fake)+gp_cost
 
 gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(gen_cost, var_list=gen_params)
 disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(disc_cost, var_list=disc_params)
@@ -243,7 +245,6 @@ with tf.Session(config=config) as session:
             num_index.append(whlen)
         if  np.shape(np.unique(_label))[0]<10:
             continue
-        #print num_index
         if iteration > 0:
             _ = session.run(gen_train_op,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
         for i in xrange(CRITIC_ITERS):
@@ -258,21 +259,17 @@ with tf.Session(config=config) as session:
                 [disc_cost, disc_train_op],
                 feed_dict={real_data: _data,real_label:_label,ind_t:np.array(num_index)}
             )
-        d_real,d_fake=session.run([disc_real,disc_fake],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
+            d_real,d_fake=session.run([disc_real,disc_fake],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             #_disc,_class_real,_class_fake,con_cost,_gp_cost= session.run([disc_cost,class_loss_real,class_loss_fake,con_kernel_cost,gp_cost],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
         if iteration>0:
             lib.plot.plot('train disc cost', _disc_cost)
             lib.plot.plot('D_real',np.mean(d_real))
             lib.plot.plot('D_fake',np.mean(d_fake))
         if iteration%100==99:
-            k0,k1,k2,k3,k4,k5,k6,k7,k8,k9= session.run([con_kernel_cost_0,con_kernel_cost_1,con_kernel_cost_2,con_kernel_cost_3,con_kernel_cost_4,con_kernel_cost_5,con_kernel_cost_6,con_kernel_cost_7,con_kernel_cost_8,con_kernel_cost_9],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
-            con_result=[k0,k1,k2,k3,k4,k5,k6,k7,k8,k9]
             print "total_kernel_loss:"
             print session.run(kernel_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             print "con_kernel_loss:"
             print session.run(con_kernel_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
-            print "con_detail:"
-            print con_result
             lib.plot.plot('time', time.time() - start_time)
 
         # Calculate dev loss and generate samples every 100 iters
