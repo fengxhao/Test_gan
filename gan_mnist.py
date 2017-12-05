@@ -148,8 +148,8 @@ slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
 gradient_penalty = tf.reduce_mean((slopes-1.)**2)
 gp_cost+= 1*gradient_penalty
 
-gen_cost  = 10*con_kernel_cost+1*(class_loss_real+class_loss_fake)
-disc_cost = -10*con_kernel_cost+1*(class_loss_real+class_loss_fake)+gp_cost
+gen_cost  = kernel_cost+con_kernel_cost+1*(class_loss_real+class_loss_fake)
+disc_cost = -1*(con_kernel_cost+kernel_cost)+1*(class_loss_real+class_loss_fake)+gp_cost
 
 gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(gen_cost, var_list=gen_params)
 disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(disc_cost, var_list=disc_params)
@@ -196,7 +196,7 @@ with tf.Session(config=config) as session:
             num_index.append(whlen)
         if  np.shape(np.unique(_label))[0]<10:
             continue
-        print num_index
+        #print num_index
         if iteration > 0:
             _ = session.run(gen_train_op,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
         for i in xrange(CRITIC_ITERS):

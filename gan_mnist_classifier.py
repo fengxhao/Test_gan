@@ -214,7 +214,6 @@ with tf.Session(config=config) as session:
             num_index.append(whlen)
         if  np.shape(np.unique(_label))[0]<10:
             continue
-        print num_index
         if iteration > 0:
             _ = session.run(gen_train_op,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
         for i in xrange(CRITIC_ITERS):
@@ -230,7 +229,6 @@ with tf.Session(config=config) as session:
                 num_index.append(whlen)
             if  np.shape(np.unique(_label))[0]<10:
                 continue
-	    #print num_index
             _disc_cost,_class_cost,_,_ = session.run(
                 [disc_cost,class_cost, disc_train_op,class_train_op],
                 feed_dict={real_data: _data,real_label:_label,ind_t:np.array(num_index)}
@@ -247,13 +245,13 @@ with tf.Session(config=config) as session:
             print "True label:"
             print _label
             print "class_real:"
-            print session.run(class_real,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
-            print "class_fake"
-            print session.run(class_fake,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
-            print "class_gen:"
-            print  session.run(gen_label)
-            print "_class_fake:"
-            print _class_fake
+            #print session.run(class_real,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
+            #print "class_fake"
+            #print session.run(class_fake,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
+            #print "class_gen:"
+            #print  session.run(gen_label)
+            #print "_class_fake:"
+            #print _class_fake
             print "total_kernel_loss:"
             print session.run(kernel_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             print "con_kernel_loss:"
