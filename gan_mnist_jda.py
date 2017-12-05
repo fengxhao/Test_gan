@@ -54,12 +54,10 @@ def LeakyReLULayer(name, n_in, n_out, inputs):
     )
     return LeakyReLU(output)
 
-def Generator(n_samples,label=None, noise=None):
+def Generator(n_samples, noise=None):
     if noise is None:
         noise = tf.random_normal([n_samples, 128])
-    if label is not None:
-        noise = tf.concat([noise,label],1)
-    output = lib.ops.linear.Linear('Generator.Input', 138, 4*4*4*DIM, noise) #input 50*128   128 * [4*4*4*64]  out 50* [4*4*4*64]
+    output = lib.ops.linear.Linear('Generator.Input', 128, 4*4*4*DIM, noise) #input 50*128   128 * [4*4*4*64]  out 50* [4*4*4*64]
     if MODE == 'wgan':
         output = lib.ops.batchnorm.Batchnorm('Generator.BN1', [0], output)
     output = tf.nn.relu(output)
@@ -101,28 +99,17 @@ def Discriminator(inputs):
     output = tf.reshape(output, [-1, 4*4*4*DIM]) # 50* (4*4*4*64)
     output_1 = lib.ops.linear.Linear('Discriminator.Output', 4*4*4*DIM, 1, output) #50*1
 
-    out_logit = lib.ops.linear.Linear('Discriminator.logit',4*4*4*DIM,10,output)
-
-    n_class = tf.nn.softmax(out_logit)
-    return output_1,out_logit,n_class   #50
+    return output_1 #50
 real_data = tf.placeholder(tf.float32, shape=[BATCH_SIZE, OUTPUT_DIM])
 real_label = tf.placeholder(tf.int32,shape=[BATCH_SIZE])
 
-real_label_onehot = tf.one_hot(real_label,10)
+fake_data = Generator(BATCH_SIZE)
 
-fake_data = Generator(BATCH_SIZE,real_label_onehot)
-
-disc_real,disc_real_logit,soft_class_real = Discriminator(real_data)
-disc_fake,disc_fake_logit,soft_class_fake = Discriminator(fake_data)
-
-class_real = tf.argmax(soft_class_real,1)
-class_fake = tf.argmax(soft_class_fake,1)
+disc_real = Discriminator(real_data)
+disc_fake= Discriminator(fake_data)
 
 gen_params = lib.params_with_name('Generator')
 disc_params = lib.params_with_name('Discriminator')
-
-class_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=real_label_onehot,logits=disc_real_logit))
-class_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=real_label_onehot,logits=disc_fake_logit))
 
 bandwidths = [2.0, 5.0, 10.0, 20.0, 40.0, 80.0]
 kernel_cost = mmd.mix_rbf_mmd2(disc_real,disc_fake,sigmas=bandwidths,id=BATCH_SIZE)
@@ -137,59 +124,6 @@ for i in range(10):
     Gimage_c_s = tf.reshape(Gimage_c,[-1,1])
     con_kernel_cost+=mmd.mix_rbf_mmd2(Image_c_s,Gimage_c_s,sigmas=bandwidths,id=ind_t[i])
 
-# find_index_0 = tf.where(tf.equal(real_label,0))
-# Image_c_0 = tf.gather(disc_real,find_index_0)
-# Gimage_c_0 = tf.gather(disc_fake,find_index_0)
-# Ima0 = tf.reshape(Image_c_0,[-1,1])
-# Gimg0= tf.reshape(Gimage_c_0,[-1,1])
-# con_kernel_cost_0=mmd.mix_rbf_mmd2(Ima0,Gimg0,sigmas=bandwidths,id=ind_t[0])
-
-# find_index_1 = tf.where(tf.equal(real_label,1))
-# Image_c_1 = tf.gather(disc_real[0],find_index_1)
-# Gimage_c_1 = tf.gather(disc_fake[0],find_index_1)
-# con_kernel_cost_1=mmd.mix_rbf_mmd2(Image_c_1,Gimage_c_1,sigmas=bandwidths,id=ind_t[1])
-#
-#
-# find_index_2 = tf.where(tf.equal(real_label,2))
-# Image_c_2 = tf.gather(disc_real[0],find_index_2)
-# Gimage_c_2 = tf.gather(disc_fake[0],find_index_2)
-# con_kernel_cost_2=mmd.mix_rbf_mmd2(Image_c_2,Gimage_c_2,sigmas=bandwidths,id=ind_t[2])
-#
-# find_index_3 = tf.where(tf.equal(real_label,3))
-# Image_c_3 = tf.gather(disc_real[0],find_index_3)
-# Gimage_c_3 = tf.gather(disc_fake[0],find_index_3)
-# con_kernel_cost_3=mmd.mix_rbf_mmd2(Image_c_3,Gimage_c_3,sigmas=bandwidths,id=ind_t[3])
-#
-# find_index_4 = tf.where(tf.equal(real_label,4))
-# Image_c_4 = tf.gather(disc_real[0],find_index_4)
-# Gimage_c_4 = tf.gather(disc_fake[0],find_index_4)
-# con_kernel_cost_4=mmd.mix_rbf_mmd2(Image_c_4,Gimage_c_4,sigmas=bandwidths,id=ind_t[4])
-#
-# find_index_5 = tf.where(tf.equal(real_label,5))
-# Image_c_5 = tf.gather(disc_real[0],find_index_5)
-# Gimage_c_5 = tf.gather(disc_fake[0],find_index_5)
-# con_kernel_cost_5=mmd.mix_rbf_mmd2(Image_c_5,Gimage_c_5,sigmas=bandwidths,id=ind_t[5])
-#
-# find_index_6 = tf.where(tf.equal(real_label,6))
-# Image_c_6 = tf.gather(disc_real[0],find_index_6)
-# Gimage_c_6 = tf.gather(disc_fake[0],find_index_6)
-# con_kernel_cost_6=mmd.mix_rbf_mmd2(Image_c_6,Gimage_c_6,sigmas=bandwidths,id=ind_t[6])
-#
-# find_index_7 = tf.where(tf.equal(real_label,7))
-# Image_c_7 = tf.gather(disc_real[0],find_index_7)
-# Gimage_c_7 = tf.gather(disc_fake[0],find_index_7)
-# con_kernel_cost_7=mmd.mix_rbf_mmd2(Image_c_7,Gimage_c_7,sigmas=bandwidths,id=ind_t[7])
-#
-# find_index_8 = tf.where(tf.equal(real_label,8))
-# Image_c_8 = tf.gather(disc_real[0],find_index_8)
-# Gimage_c_8 = tf.gather(disc_fake[0],find_index_8)
-# con_kernel_cost_8=mmd.mix_rbf_mmd2(Image_c_8,Gimage_c_8,sigmas=bandwidths,id=ind_t[8])
-#
-# find_index_9 = tf.where(tf.equal(real_label,9))
-# Image_c_9 = tf.gather(disc_real[0],find_index_9)
-# Gimage_c_9 = tf.gather(disc_fake[0],find_index_9)
-# con_kernel_cost_9=mmd.mix_rbf_mmd2(Image_c_9,Gimage_c_9,sigmas=bandwidths,id=ind_t[9])
-
 alpha = tf.random_uniform(
    shape=[BATCH_SIZE,1],
    minval=0.,
@@ -197,14 +131,14 @@ alpha = tf.random_uniform(
 )
 differences = fake_data - real_data
 interpolates = real_data + (alpha*differences)
-inter_img,a,b=Discriminator(interpolates)
+inter_img=Discriminator(interpolates)
 gradients = tf.gradients(inter_img, [interpolates])[0]
 slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
 gradient_penalty = tf.reduce_mean((slopes-1.)**2)
 gp_cost= 10*gradient_penalty
 
-gen_cost  = con_kernel_cost+10*(class_loss_real+class_loss_fake)
-disc_cost = -1*(con_kernel_cost)+10*(class_loss_real+class_loss_fake)+gp_cost
+gen_cost  = kernel_cost+con_kernel_cost
+disc_cost = -1*(kernel_cost+con_kernel_cost)+gp_cost
 
 gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(gen_cost, var_list=gen_params)
 disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(disc_cost, var_list=disc_params)
@@ -213,9 +147,7 @@ disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).m
 fixed_noise = tf.constant(np.random.normal(size=(100, 128)).astype('float32'))
 fixed_labels = tf.constant(np.array([0,1,2,3,4,5,6,7,8,9]*10,dtype='int32'))
 fix_label_onehot = tf.one_hot(tf.reshape(fixed_labels,[100]),10)
-fixed_noise_samples = Generator(100, label=fix_label_onehot,noise=fixed_noise)
-_,_,class_gen_label = Discriminator(fixed_noise_samples)
-gen_label = tf.argmax(class_gen_label,1)
+fixed_noise_samples = Generator(100,noise=fixed_noise)
 
 def generate_image(frame, true_dist):
     samples = session.run(fixed_noise_samples)
@@ -256,29 +188,17 @@ with tf.Session(config=config) as session:
                 num_index.append(whlen)
             if  np.shape(np.unique(_label))[0]<10:
                 continue
-            _disc_cost, _ = session.run(
-                [disc_cost, disc_train_op],
-                feed_dict={real_data: _data,real_label:_label,ind_t:np.array(num_index)}
-            )
+            _disc_cost, _ = session.run([disc_cost, disc_train_op],feed_dict={real_data: _data,real_label:_label,ind_t:np.array(num_index)})
             d_real,d_fake=session.run([disc_real,disc_fake],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
-            #_disc,_class_real,_class_fake,con_cost,_gp_cost= session.run([disc_cost,class_loss_real,class_loss_fake,con_kernel_cost,gp_cost],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
         if iteration>0:
             lib.plot.plot('train disc cost', _disc_cost)
             lib.plot.plot('D_real',np.mean(d_real))
             lib.plot.plot('D_fake',np.mean(d_fake))
         if iteration%100==99:
-            #k0,k1,k2,k3,k4,k5,k6,k7,k8,k9 =session.run([con_kernel_cost_0,con_kernel_cost_1,con_kernel_cost_2,con_kernel_cost_3,con_kernel_cost_4,con_kernel_cost_5,con_kernel_cost_6,con_kernel_cost_7,con_kernel_cost_8,con_kernel_cost_9],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
-            #in_k=[k0,k1,k2,k3,k4,k5,k6,k7,k8,k9]
             print "total_kernel_loss:"
             print session.run(kernel_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             print "con_kernel_loss:"
             print session.run(con_kernel_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
-            #print in_k
-            real,fake=session.run([class_loss_real,class_loss_fake],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
-            print "real_class:"
-            print real
-            print "fake_class:"
-            print fake
             lib.plot.plot('time', time.time() - start_time)
 
         # Calculate dev loss and generate samples every 100 iters
