@@ -101,10 +101,26 @@ def Discriminator(inputs):
     output = tf.reshape(output, [-1, 4*4*4*DIM]) # 50* (4*4*4*64)
     output_1 = lib.ops.linear.Linear('Discriminator.Output', 4*4*4*DIM, 1, output) #50*1
 
-    out_logit = lib.ops.linear.Linear('Discriminator.logit',4*4*4*DIM,10,output)
+    return output_1   #50
 
-    n_class = tf.nn.softmax(out_logit)
-    return output_1,out_logit,n_class   #50
+def Classifier(inputs):
+    output =tf.reshape(inputs,[-1,1,28,28])
+    conv1 = lib.ops.conv2d.Conv2D('Classifier.1',1,32,filter_size=5,inputs=output,stride=1)
+    pool1 = tf.nn.max_pool(conv1,[1,2,2,1],[1,1,1,1],padding="SAME")
+    conv2 = lib.ops.conv2d.Conv2D('Classifier.2',32,64,filter_size=5,inputs=pool1,stride=1)
+    pool2= tf.nn.max_pool(conv2,[1,2,2,1],[1,1,1,1],padding="SAME")
+
+    img = tf.reshape(pool2,[BATCH_SIZE,-1])
+
+    img= lib.ops.linear.Linear('Classifier.ln1',28*28*64,1024,img)
+
+    img = tf.nn.relu(img)
+
+    output = lib.ops.linear.Linear("Classifier.ln2",1024,10,img)
+
+    return output
+
+
 real_data = tf.placeholder(tf.float32, shape=[BATCH_SIZE, OUTPUT_DIM])
 real_label = tf.placeholder(tf.int32,shape=[BATCH_SIZE])
 
@@ -112,17 +128,20 @@ real_label_onehot = tf.one_hot(real_label,10)
 
 fake_data = Generator(BATCH_SIZE,real_label_onehot)
 
-disc_real,disc_real_logit,soft_class_real = Discriminator(real_data)
-disc_fake,disc_fake_logit,soft_class_fake = Discriminator(fake_data)
+disc_real = Discriminator(real_data)
+disc_fake = Discriminator(fake_data)
 
-class_real = tf.argmax(soft_class_real,1)
-class_fake = tf.argmax(soft_class_fake,1)
+class_real_logit = Classifier(real_data)
+class_fake_logit = Classifier(fake_data)
+
 
 gen_params = lib.params_with_name('Generator')
 disc_params = lib.params_with_name('Discriminator')
+class_params = lib.params_with_name('Classifier')
 
-class_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=real_label_onehot,logits=disc_real_logit))
-class_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=real_label_onehot,logits=disc_fake_logit))
+
+class_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=real_label_onehot,logits=class_real_logit))
+class_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=real_label_onehot,logits=class_fake_logit))
 
 bandwidths = [2.0, 5.0, 10.0, 20.0, 40.0, 80.0]
 kernel_cost = mmd.mix_rbf_mmd2(disc_real,disc_fake,sigmas=bandwidths,id=BATCH_SIZE)
@@ -142,28 +161,27 @@ alpha = tf.random_uniform(
 )
 differences = fake_data - real_data
 interpolates = real_data + (alpha*differences)
-inter_img,a,b=Discriminator(interpolates)
+inter_img=Discriminator(interpolates)
 gradients = tf.gradients(inter_img, [interpolates])[0]
 slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
 gradient_penalty = tf.reduce_mean((slopes-1.)**2)
 gp_cost+= 1*gradient_penalty
 
-gen_cost  = 10*con_kernel_cost+1*(class_loss_real+class_loss_fake)
-disc_cost = -10*con_kernel_cost+1*(class_loss_real+class_loss_fake)+gp_cost
+gen_cost  = con_kernel_cost+class_loss_fake
+disc_cost = -con_kernel_cost+gp_cost
+class_cost = class_loss_real+class_loss_fake
+
 
 gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(gen_cost, var_list=gen_params)
 disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(disc_cost, var_list=disc_params)
+class_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(class_cost,var_list=class_params)
 
-# gen_train_op = tf.train.RMSPropOptimizer(learning_rate=5e-5).minimize(gen_cost, var_list=gen_params)
-# disc_train_op = tf.train.RMSPropOptimizer(learning_rate=5e-5).minimize(disc_cost, var_list=disc_params)
 
 # For saving samples
 fixed_noise = tf.constant(np.random.normal(size=(100, 128)).astype('float32'))
 fixed_labels = tf.constant(np.array([0,1,2,3,4,5,6,7,8,9]*10,dtype='int32'))
 fix_label_onehot = tf.one_hot(tf.reshape(fixed_labels,[100]),10)
 fixed_noise_samples = Generator(100, label=fix_label_onehot,noise=fixed_noise)
-_,_,class_gen_label = Discriminator(fixed_noise_samples)
-gen_label = tf.argmax(class_gen_label,1)
 
 def generate_image(frame, true_dist):
     samples = session.run(fixed_noise_samples)
@@ -213,16 +231,17 @@ with tf.Session(config=config) as session:
             if  np.shape(np.unique(_label))[0]<10:
                 continue
 	    #print num_index
-            _disc_cost, _ = session.run(
-                [disc_cost, disc_train_op],
+            _disc_cost,_class_cost,_,_ = session.run(
+                [disc_cost,class_cost, disc_train_op,class_train_op],
                 feed_dict={real_data: _data,real_label:_label,ind_t:np.array(num_index)}
             )
-        d_real,d_fake=session.run([disc_real,disc_fake],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
+            d_real,d_fake=session.run([disc_real,disc_fake],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             #_disc,_class_real,_class_fake,con_cost,_gp_cost= session.run([disc_cost,class_loss_real,class_loss_fake,con_kernel_cost,gp_cost],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
         if iteration>0:
             lib.plot.plot('train disc cost', _disc_cost)
             lib.plot.plot('D_real',np.mean(d_real))
             lib.plot.plot('D_fake',np.mean(d_fake))
+            lib.plot.plot('Class_loss',_class_cost)
         if iteration%100==99:
             _class_real,_class_fake= session.run([class_loss_real,class_loss_fake],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             print "True label:"
