@@ -116,11 +116,17 @@ def main(_):
         reduce_cost = tf.reduce_mean(disc_fake) -tf.reduce_mean(disc_real)
         FSR_cost = tf.nn.relu(reduce_cost)
     #******************************************
-    class_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=y_label,logits=real_class))
-    class_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=y_label,logits=fake_class))
+    # class_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=y_label,logits=real_class))
+    # class_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=y_label,logits=fake_class))
+    class_loss_real = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y_label_index,logits=real_class))
+    class_loss_fake = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y_label_index,logits=fake_class))
 
-    gen_cost  = -tf.reduce_mean(disc_fake) + 10*(class_loss_fake)
-    disc_cost = tf.reduce_mean(disc_fake) - tf.reduce_mean(disc_real) + 10*(class_loss_fake+class_loss_real)
+    # gen_cost  = -tf.reduce_mean(disc_fake) + 10*(class_loss_fake)
+    # disc_cost = tf.reduce_mean(disc_fake) - tf.reduce_mean(disc_real) + 10*(class_loss_fake+class_loss_real)
+    gen_wgan_cost =  -tf.reduce_mean(disc_fake)
+    dic_wgan_cost = tf.reduce_mean(disc_fake) - tf.reduce_mean(disc_real)
+    gen_cost = gen_wgan_cost +class_loss_fake
+    disc_cost = dic_wgan_cost+class_loss_real
 
     global_step = tf.Variable(0)
     learning_rate = tf.train.exponential_decay(1e-3,global_step,200,0.96,staircase=True)
@@ -184,13 +190,13 @@ def main(_):
                 _genc,_ = sess.run([gen_cost,gen_train],feed_dict={X_image:data_x,y_label_index:data_y})
 
             for x in xrange(FLAGS.disc_inter):
-                _disc,_class_real,_class_fake,_ = sess.run([disc_cost,class_loss_real,class_loss_fake,disc_train],feed_dict={X_image:data_x,y_label_index:data_y})
-
+                #_disc,_class_real,_class_fake,_ = sess.run([disc_cost,class_loss_real,class_loss_fake,disc_train],feed_dict={X_image:data_x,y_label_index:data_y})
+                _disc_cost,_wgan_cost,ac_gan,_= sess.run([disc_cost,dic_wgan_cost,class_loss_real,disc_train],feed_dict={X_image:data_x,y_label_index:data_y})
             if i>0:
                 #plot.plot("Generator_cost",_genc)
-                plot.plot("Discriminator",_disc)
-                #plot.plot("class_real",_class_real)
-               # plot.plot("class_fake",_class_fake)
+                plot.plot("Discriminator",_disc_cost)
+                plot.plot("class_real",_wgan_cost)
+                plot.plot("class_fake",ac_gan)
                 plot.plot('time', time.time() - start_time)
             #if clip_ops is not None:
             #    sess.run(clip_weight_clip)

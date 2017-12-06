@@ -203,8 +203,8 @@ slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
 gradient_penalty = tf.reduce_mean((slopes-1.)**2)
 gp_cost= 10*gradient_penalty
 
-gen_cost  = con_kernel_cost+10*(class_loss_real+class_loss_fake)
-disc_cost = -1*(con_kernel_cost)+10*(class_loss_real+class_loss_fake)+gp_cost
+gen_cost  = con_kernel_cost+10*(class_loss_fake)
+disc_cost = -1*(con_kernel_cost)+10*(class_loss_real)+gp_cost
 
 gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(gen_cost, var_list=gen_params)
 disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(disc_cost, var_list=disc_params)
