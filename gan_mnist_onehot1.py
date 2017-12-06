@@ -288,7 +288,7 @@ with tf.Session(config=config) as session:
             lib.plot.plot('train disc cost', _disc_cost)
             #lib.plot.plot('D_real',np.mean(d_real))
             #lib.plot.plot('D_fake',np.mean(d_fake))
-        if iteration%100==99:
+        #if iteration%100==99:
 
             #k0,k1,k2,k3,k4,k5,k6,k7,k8,k9 =session.run([con_kernel_cost_0,con_kernel_cost_1,con_kernel_cost_2,con_kernel_cost_3,con_kernel_cost_4,con_kernel_cost_5,con_kernel_cost_6,con_kernel_cost_7,con_kernel_cost_8,con_kernel_cost_9],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             #in_k=[k0,k1,k2,k3,k4,k5,k6,k7,k8,k9]
@@ -296,7 +296,7 @@ with tf.Session(config=config) as session:
             im0,im1,im2,im3,im4,im5,im6,im7,im8,im9 = session.run([f0,f1,f2,f3,f4,f5,f6,f7,f8,f9],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             #gim0,gim1,gim2,gim3,gim4,gim5,gim6,gim7,gim8,gim9 = session.run([Gimg0,Gimg1,Gimg2,Gimg3,Gimg4,Gimg5,Gimg6,Gimg6,Gimg7,Gimg8,Gimg9],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             in_k=[k0,k1,k2,k3,k4,k5,k6,k7,k8,k9]
-            im =[im0,im1,im2,im3,im3,im4,im5,im6,im7,im8,im9]
+            im =[im0,im1,im2,im3,im4,im5,im6,im7,im8,im9]
             #gimg = [gim0,gim1,gim2,gim3,gim4,gim5,gim6,gim7,gim8,gim9]
             print "total_kernel_loss:"
             print session.run(kernel_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
@@ -304,7 +304,7 @@ with tf.Session(config=config) as session:
             print session.run(con_kernel_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             print in_k
             print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-            print im
+            #print im
             print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
             print num_index
             #print in_k
@@ -329,7 +329,7 @@ with tf.Session(config=config) as session:
             generate_image(iteration, _data)
 
         # Write logs every 100 iters
-        if (iteration < 5) or (iteration % 100 == 99):
+        if (iteration < 99) or (iteration % 100 == 99):
             lib.plot.flush()
 
         lib.plot.tick()
