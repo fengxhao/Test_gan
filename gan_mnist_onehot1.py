@@ -220,7 +220,7 @@ slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
 gradient_penalty = tf.reduce_mean((slopes-1.)**2)
 gp_cost= 10*gradient_penalty
 
-con_kernel_cost = k_0+k_1+k_2+k_3+k_4+k_4+k_5+k_6+k_7+k_8+k_8+k_9
+con_kernel_cost = k_0+k_1+k_2+k_3+k_4+k_5+k_6+k_7+k_8+k_9
 gen_cost  = con_kernel_cost+10*(class_loss_fake)
 disc_cost = -1*(con_kernel_cost)+10*(class_loss_real)+gp_cost
 
