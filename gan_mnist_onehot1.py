@@ -261,9 +261,11 @@ with tf.Session(config=config) as session:
         num_index=[]
         for ind in range(10):
             whlen = len(np.where(_label==ind)[0])
+            if whlen==0:
+                whlen=1
             num_index.append(whlen)
-        if  np.shape(np.unique(_label))[0]<10:
-            continue
+        # if  np.shape(np.unique(_label))[0]<10:
+        #     continue
         if iteration > 0:
             _ = session.run(gen_train_op,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
         for i in xrange(CRITIC_ITERS):
@@ -271,9 +273,11 @@ with tf.Session(config=config) as session:
             num_index=[]
             for ind in range(10):
                 whlen = len(np.where(_label==ind)[0])
+                if whlen==0:
+                    whlen=1
                 num_index.append(whlen)
-            if  np.shape(np.unique(_label))[0]<10:
-                continue
+            # if  np.shape(np.unique(_label))[0]<10:
+            #     continue
             _disc_cost, _ = session.run(
                 [disc_cost, disc_train_op],
                 feed_dict={real_data: _data,real_label:_label,ind_t:np.array(num_index)}
