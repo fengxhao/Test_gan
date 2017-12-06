@@ -282,18 +282,26 @@ with tf.Session(config=config) as session:
             #_disc,_class_real,_class_fake,con_cost,_gp_cost= session.run([disc_cost,class_loss_real,class_loss_fake,con_kernel_cost,gp_cost],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
         if iteration>0:
             lib.plot.plot('train disc cost', _disc_cost)
-            lib.plot.plot('D_real',np.mean(d_real))
-            lib.plot.plot('D_fake',np.mean(d_fake))
+            #lib.plot.plot('D_real',np.mean(d_real))
+            #lib.plot.plot('D_fake',np.mean(d_fake))
         if iteration%100==99:
             #k0,k1,k2,k3,k4,k5,k6,k7,k8,k9 =session.run([con_kernel_cost_0,con_kernel_cost_1,con_kernel_cost_2,con_kernel_cost_3,con_kernel_cost_4,con_kernel_cost_5,con_kernel_cost_6,con_kernel_cost_7,con_kernel_cost_8,con_kernel_cost_9],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             #in_k=[k0,k1,k2,k3,k4,k5,k6,k7,k8,k9]
             k0,k1,k2,k3,k4,k5,k6,k7,k8,k9=session.run([k_0,k_1,k_2,k_3,k_4,k_5,k_6,k_7,k_8,k_9],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
+            im0,im1,im2,im3,im3,im4,im5,im6,im7,im8,im9 = session.run([Ima0,Ima1,Ima2,Ima3,Ima4,Ima5,Ima6,Ima7,Ima8,Ima9],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
+            gim0,gim1,gim2,gim3,gim4,gim5,gim6,gim7,gim8,gim9 = session.run([Gimg0,Gimg1,Gimg2,Gimg3,Gimg4,Gimg5,Gimg6,Gimg6,Gimg7,Gimg8,Gimg9],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             in_k=[k0,k1,k2,k3,k4,k5,k6,k7,k8,k9]
+            im =[im0,im1,im2,im3,im3,im4,im5,im6,im7,im8,im9]
+            gimg = [gim0,gim1,gim2,gim3,gim4,gim5,gim6,gim7,gim8,gim9]
             print "total_kernel_loss:"
             print session.run(kernel_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             print "con_kernel_loss:"
             print session.run(con_kernel_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             print in_k
+            print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+            print im
+            print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+            print gimg
             #print in_k
             # real,fake=session.run([class_loss_real,class_loss_fake],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             # print "real_class:"
