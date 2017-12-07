@@ -127,7 +127,7 @@ class_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=
 
 bandwidths = [2.0, 5.0, 10.0, 20.0, 40.0, 80.0]
 kernel_cost = mmd.mix_rbf_mmd2(disc_real,disc_fake,sigmas=bandwidths,id=BATCH_SIZE)
-ind_t=tf.placeholder(tf.float32,[10])
+ind_t=tf.placeholder(tf.int32,[10])
 con_kernel_cost =0
 gp_cost =0
 for i in range(10):
