@@ -220,7 +220,7 @@ with tf.Session() as session:
             lib.plot.plot('inception score', inception_score[0])
 
         # Calculate dev loss and generate samples every 100 iters
-        # if iteration % 100 == 99:
+        if iteration % 100 == 99:
         #     dev_disc_costs = []
         #     for images,de_label in dev_gen():
         #         num_index_de=[]
