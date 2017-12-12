@@ -24,7 +24,7 @@ from ops import mmd
 MODE = 'wgan-gp' # dcgan, wgan, or wgan-gp
 DIM = 64 # Model dimensionality
 BATCH_SIZE = 50 # Batch size
-CRITIC_ITERS = 5 # For WGAN and WGAN-GP, number of critic iters per gen iter
+CRITIC_ITERS = 1 # For WGAN and WGAN-GP, number of critic iters per gen iter
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
 ITERS = 200000 # How many generator iterations to train for 
 OUTPUT_DIM = 784 # Number of pixels in MNIST (28*28)
@@ -105,7 +105,6 @@ def Discriminator(inputs):
 
     n_class = tf.nn.softmax(out_logit)
     return output_1,out_logit,n_class   #50
-
 real_data = tf.placeholder(tf.float32, shape=[BATCH_SIZE, OUTPUT_DIM])
 real_label = tf.placeholder(tf.int32,shape=[BATCH_SIZE])
 
@@ -136,23 +135,21 @@ for i in range(10):
     Gimage_c = tf.gather(disc_fake[0],find_index)
     con_kernel_cost+=mmd.mix_rbf_mmd2(Image_c,Gimage_c,sigmas=bandwidths,id=ind_t[i])
 
-    alpha = tf.random_uniform(
-        shape=[ind_t[i],1],
-        minval=0.,
-        maxval=1.
-    )
-    fake_data_g= tf.gather(fake_data,find_index)
-    real_data_g = tf.gather(real_data,find_index)
-    differences = fake_data_g - real_data_g
-    interpolates = real_data_g + (alpha*differences)
-    inter_img,a,b=Discriminator(interpolates)
-    gradients = tf.gradients(inter_img, [interpolates])[0]
-    slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
-    gradient_penalty = tf.reduce_mean((slopes-1.)**2)
-    gp_cost+= LAMBDA*gradient_penalty
+alpha = tf.random_uniform(
+   shape=[BATCH_SIZE,1],
+   minval=0.,
+   maxval=1.
+)
+differences = fake_data - real_data
+interpolates = real_data + (alpha*differences)
+inter_img,a,b=Discriminator(interpolates)
+gradients = tf.gradients(inter_img, [interpolates])[0]
+slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
+gradient_penalty = tf.reduce_mean((slopes-1.)**2)
+gp_cost+= 1*gradient_penalty
 
-gen_cost  = con_kernel_cost+1*(class_loss_real+class_loss_fake)
-disc_cost = -con_kernel_cost+1*(class_loss_real+class_loss_fake)+gp_cost
+gen_cost  = kernel_cost+1*(class_loss_real+class_loss_fake)
+disc_cost = -1*(con_kernel_cost)+1*(class_loss_real+class_loss_fake)+gp_cost
 
 gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(gen_cost, var_list=gen_params)
 disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(disc_cost, var_list=disc_params)
@@ -196,7 +193,7 @@ with tf.Session(config=config) as session:
             num_index.append(whlen)
         if  np.shape(np.unique(_label))[0]<10:
             continue
-
+        #print num_index
         if iteration > 0:
             _ = session.run(gen_train_op,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
         for i in xrange(CRITIC_ITERS):
@@ -204,11 +201,15 @@ with tf.Session(config=config) as session:
             num_index=[]
             for ind in range(10):
                 whlen = len(np.where(_label==ind)[0])
-                if whlen ==0:
-                    whlen=1
                 num_index.append(whlen)
             if  np.shape(np.unique(_label))[0]<10:
-	    	continue
+                continue
+                #if whlen ==0:
+                #    whlen=1
+                num_index.append(whlen)
+            if  np.shape(np.unique(_label))[0]<10:
+                continue
+	    #print num_index
             _disc_cost, _ = session.run(
                 [disc_cost, disc_train_op],
                 feed_dict={real_data: _data,real_label:_label,ind_t:np.array(num_index)}
@@ -235,8 +236,8 @@ with tf.Session(config=config) as session:
             print session.run(kernel_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             print "con_kernel_loss:"
             print session.run(con_kernel_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
-            print "gp_loss:"
-            print session.run(gp_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
+            #print "gp_loss:"
+            #print session.run(gp_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
             lib.plot.plot('time', time.time() - start_time)
 
         # Calculate dev loss and generate samples every 100 iters
