@@ -2,13 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b52914ff-c7d4-464b-8ea7-149e46aaa8fa" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gan_mnist_fsr.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/gan_mnist_jda.py" afterPath="$PROJECT_DIR$/gan_mnist_val.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/D_fake.jpg" afterPath="$PROJECT_DIR$/D_fake.jpg" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/D_real.jpg" afterPath="$PROJECT_DIR$/D_real.jpg" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/time.jpg" afterPath="$PROJECT_DIR$/time.jpg" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/log.pkl" afterPath="$PROJECT_DIR$/log.pkl" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gan_mnist_fsr_conkernel.py" />
     </list>
     <ignored path="AC_gan.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -47,20 +41,13 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="gan_mnist_fsr.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="gan_mnist_fsr.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/gan_mnist_fsr.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="2.0535212">
-              <caret line="227" column="32" selection-start-line="227" selection-start-column="32" selection-end-line="227" selection-end-column="32" />
+            <state vertical-scroll-proportion="0.0">
+              <caret line="153" column="0" selection-start-line="153" selection-start-column="0" selection-end-line="153" selection-end-column="0" />
               <folding />
             </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="con_kernel_loss.jpg" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/con_kernel_loss.jpg">
-          <provider selected="true" editor-type-id="images">
-            <state />
           </provider>
         </entry>
       </file>
@@ -68,6 +55,26 @@
         <entry file="file://$PROJECT_DIR$/train_disc_cost.jpg">
           <provider selected="true" editor-type-id="images">
             <state />
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="gan_mnist.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/gan_mnist.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0">
+              <caret line="22" column="0" selection-start-line="22" selection-start-column="0" selection-end-line="22" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="gan_mnist_fsr_conkernel.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/gan_mnist_fsr_conkernel.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.59859157">
+              <caret line="211" column="29" selection-start-line="211" selection-start-column="29" selection-end-line="211" selection-end-column="29" />
+              <folding />
+            </state>
           </provider>
         </entry>
       </file>
@@ -153,6 +160,7 @@
         <option value="$PROJECT_DIR$/gan_mnist_bn.py" />
         <option value="$PROJECT_DIR$/gan_mnist_fsr.py" />
         <option value="$PROJECT_DIR$/gan_mnist_val.py" />
+        <option value="$PROJECT_DIR$/gan_mnist_fsr_conkernel.py" />
       </list>
     </option>
   </component>
@@ -539,16 +547,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/save_cifar_image/samples_199.jpg">
-      <provider selected="true" editor-type-id="images">
-        <state />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/save_cifar_image/samples_399.jpg">
-      <provider selected="true" editor-type-id="images">
-        <state />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/save_cifar_image/samples_1199.jpg">
       <provider selected="true" editor-type-id="images">
         <state />
@@ -803,14 +801,6 @@
         <state />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/gan_mnist_val.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="120" column="46" selection-start-line="120" selection-start-column="46" selection-end-line="120" selection-end-column="46" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/gan_mnist_onehot1.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -821,8 +811,32 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/gan_mnist_fsr.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="2.0535212">
-          <caret line="227" column="32" selection-start-line="227" selection-start-column="32" selection-end-line="227" selection-end-column="32" />
+        <state vertical-scroll-proportion="0.0">
+          <caret line="153" column="0" selection-start-line="153" selection-start-column="0" selection-end-line="153" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gan_mnist.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="22" column="0" selection-start-line="22" selection-start-column="0" selection-end-line="22" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gan_mnist_val.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="120" column="46" selection-start-line="120" selection-start-column="46" selection-end-line="120" selection-end-column="46" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gan_mnist_fsr_conkernel.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.59859157">
+          <caret line="211" column="29" selection-start-line="211" selection-start-column="29" selection-end-line="211" selection-end-column="29" />
           <folding />
         </state>
       </provider>
