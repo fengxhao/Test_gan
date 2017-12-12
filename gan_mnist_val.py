@@ -98,31 +98,19 @@ def Discriminator(inputs):
 
     output = tf.reshape(output, [-1, 4*4*4*DIM]) # 50* (4*4*4*64)
     output_1 = lib.ops.linear.Linear('Discriminator.Output', 4*4*4*DIM, 1, output) #50*1
+    out_logit = lib.ops.linear.Linear('Discriminator.logit',4*4*4*DIM,10,output)
 
-    return output_1 #50
+    return output_1,out_logit #50
 real_data = tf.placeholder(tf.float32, shape=[BATCH_SIZE, OUTPUT_DIM])
 real_label = tf.placeholder(tf.int32,shape=[BATCH_SIZE])
 
 fake_data = Generator(BATCH_SIZE)
 
-disc_real = Discriminator(real_data)
-disc_fake= Discriminator(fake_data)
+disc_real,real_logit = Discriminator(real_data)
+disc_fake,fake_logit= Discriminator(fake_data)
 
 gen_params = lib.params_with_name('Generator')
 disc_params = lib.params_with_name('Discriminator')
-
-bandwidths = [2.0, 5.0, 10.0, 20.0, 40.0, 80.0]
-kernel_cost = mmd.mix_rbf_mmd2(disc_real,disc_fake,sigmas=bandwidths,id=BATCH_SIZE)
-ind_t=tf.placeholder(tf.int32,[10])
-con_kernel_cost=0
-
-for i in range(10):
-    find_index = tf.where(tf.equal(real_label,i))
-    Image_c = tf.gather(disc_real,find_index)
-    Gimage_c = tf.gather(disc_fake,find_index)
-    Image_c_s = tf.reshape(Image_c,[-1,1])
-    Gimage_c_s = tf.reshape(Gimage_c,[-1,1])
-    con_kernel_cost+=mmd.mix_rbf_mmd2(Image_c_s,Gimage_c_s,sigmas=bandwidths,id=ind_t[i])
 
 alpha = tf.random_uniform(
    shape=[BATCH_SIZE,1],
@@ -131,14 +119,17 @@ alpha = tf.random_uniform(
 )
 differences = fake_data - real_data
 interpolates = real_data + (alpha*differences)
-inter_img=Discriminator(interpolates)
+inter_img,a=Discriminator(interpolates)
 gradients = tf.gradients(inter_img, [interpolates])[0]
 slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
 gradient_penalty = tf.reduce_mean((slopes-1.)**2)
 gp_cost= 10*gradient_penalty
 
-gen_cost  = kernel_cost
-disc_cost = -1*(kernel_cost)+gp_cost
+class_loss_real = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=real_label,logits=real_logit))
+class_loss_fake = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=real_label,logits=fake_logit))
+
+gen_cost  = -1*tf.reduce_mean(disc_fake)+class_loss_fake
+disc_cost = tf.reduce_mean(disc_fake) - tf.reduce_mean(disc_real)+(class_loss_fake+class_loss_real)+gp_cost
 
 gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(gen_cost, var_list=gen_params)
 disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(disc_cost, var_list=disc_params)
@@ -171,51 +162,31 @@ with tf.Session(config=config) as session:
     gen = inf_train_gen()
     for iteration in xrange(ITERS):
         start_time = time.time()
-        _data,_label = gen.next()
-        num_index=[]
-        for ind in range(10):
-            whlen = len(np.where(_label==ind)[0])
-            num_index.append(whlen)
-        if  np.shape(np.unique(_label))[0]<10:
-            continue
         if iteration > 0:
-            _ = session.run(gen_train_op,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
+            _ = session.run(gen_train_op,feed_dict={real_data:_data,real_label:_label})
         for i in xrange(CRITIC_ITERS):
             _data,_label = gen.next()
-            num_index=[]
-            for ind in range(10):
-                whlen = len(np.where(_label==ind)[0])
-                num_index.append(whlen)
-            if  np.shape(np.unique(_label))[0]<10:
-                continue
-            _disc_cost, _ = session.run([disc_cost, disc_train_op],feed_dict={real_data: _data,real_label:_label,ind_t:np.array(num_index)})
-            d_real,d_fake=session.run([disc_real,disc_fake],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
+            _disc_cost, _ = session.run([disc_cost, disc_train_op],feed_dict={real_data: _data,real_label:_label})
+            d_real,d_fake=session.run([disc_real,disc_fake],feed_dict={real_data:_data,real_label:_label})
         if iteration>0:
-            lib.plot.plot('train disc cost', _disc_cost)
-            lib.plot.plot('D_real',np.mean(d_real))
-            lib.plot.plot('D_fake',np.mean(d_fake))
-        if iteration%100==99:
-            print "total_kernel_loss:"
-            print session.run(kernel_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
-            print "con_kernel_loss:"
-            print session.run(con_kernel_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
+            lib.plot.plot('train disc cost label', _disc_cost)
+            lib.plot.plot('D_real label',np.mean(d_real))
+            lib.plot.plot('D_fake label',np.mean(d_fake))
             lib.plot.plot('time', time.time() - start_time)
 
-        # Calculate dev loss and generate samples every 100 iters
-        #if iteration % 100 == 99:
-        #    dev_disc_costs = []
-        #    for images,_ in dev_gen():
-        #        _dev_disc_cost = session.run(
-        #            disc_cost, 
-        #            feed_dict={real_data: images}
-        #        )
-        #        dev_disc_costs.append(_dev_disc_cost)
-        #    lib.plot.plot('dev disc cost', np.mean(dev_disc_costs))
-
-            generate_image(iteration, _data)
+        #Calculate dev loss and generate samples every 100 iters
+        if iteration % 100 == 99:
+           dev_disc_costs = []
+           for images,i_label in dev_gen():
+               _dev_disc_cost = session.run(
+                   disc_cost,
+                   feed_dict={real_data: images,real_label:i_label}
+               )
+               dev_disc_costs.append(_dev_disc_cost)
+           lib.plot.plot('dev disc cost', np.mean(dev_disc_costs))
+           generate_image(iteration, _data)
 
         # Write logs every 100 iters
         if (iteration < 5) or (iteration % 100 == 99):
             lib.plot.flush()
-
         lib.plot.tick()
