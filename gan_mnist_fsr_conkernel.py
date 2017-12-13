@@ -21,7 +21,7 @@ import tflib.plot
 
 from ops import mmd
 
-MODE = 'wgan-gp' # dcgan, wgan, or wgan-gp
+MODE = 'wgan' # dcgan, wgan, or wgan-gp
 DIM = 64 # Model dimensionality
 BATCH_SIZE = 50 # Batch size
 CRITIC_ITERS = 5 # For WGAN and WGAN-GP, number of critic iters per gen iter
@@ -152,8 +152,8 @@ slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
 gradient_penalty = tf.reduce_mean((slopes-1.)**2)
 gp_cost= 10*gradient_penalty
 
-gen_cost  = con_kernel_cost+(class_loss_fake) +10*FSR_cost
-disc_cost = -1*(con_kernel_cost)+(class_loss_real+class_loss_fake)+gp_cost+10*FSR_cost
+gen_cost  = con_kernel_cost+(class_loss_fake) +100*FSR_cost
+disc_cost = -1*(con_kernel_cost)+(class_loss_real+class_loss_fake)+gp_cost+100*FSR_cost
 
 gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(gen_cost, var_list=gen_params)
 disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(disc_cost, var_list=disc_params)
@@ -202,22 +202,19 @@ with tf.Session(config=config) as session:
             num = np.shape(np.unique(_label))[0]
             num_index.append(num)
             _disc_cost, _ = session.run([disc_cost, disc_train_op],feed_dict={real_data: _data,real_label:_label,ind_t:np.array(num_index)})
-            d_real,d_fake,_con_kernel,real,fake,fsr=session.run([disc_real,disc_fake,con_kernel_cost,class_loss_real,class_loss_fake,FSR_cost],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
+            d_real,d_fake,_con_kernel,fsr,gp_=session.run([disc_real,disc_fake,con_kernel_cost,FSR_cost,gp_cost],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
         if iteration>0:
             lib.plot.plot('train disc cost conkernel', _disc_cost)
             lib.plot.plot('D_real conkernel',np.mean(d_real))
             lib.plot.plot('D_fake conkernel',np.mean(d_fake))
             lib.plot.plot('con_kernel_loss conkernel',_con_kernel)
+            lib.plot.plot('gp_cost conkernel',gp_)
             lib.plot.plot('fsr',fsr)
         if iteration%100==99:
             print "total_kernel_loss:"
             print session.run(kernel_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
-            print "con_kernel_loss:"
-            print _con_kernel
-            print "real_class:"
-            print real
-            print "fake_class:"
-            print fake
+            #print "con_kernel_loss:"
+            #print _con_kernel
             lib.plot.plot('time', time.time() - start_time)
 
         # Calculate dev loss and generate samples every 100 iters
