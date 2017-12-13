@@ -170,7 +170,7 @@ def generate_image(frame, true_dist):
     samples = session.run(fixed_noise_samples)
     lib.save_images.save_images(
         samples.reshape((100, 28, 28)),
-        './out2/samples_{}.jpg'.format(frame)
+        './out1/samples_{}.jpg'.format(frame)
     )
 
 # Dataset iterator
@@ -202,12 +202,13 @@ with tf.Session(config=config) as session:
             num = np.shape(np.unique(_label))[0]
             num_index.append(num)
             _disc_cost, _ = session.run([disc_cost, disc_train_op],feed_dict={real_data: _data,real_label:_label,ind_t:np.array(num_index)})
-            d_real,d_fake,_con_kernel,real,fake,fsr=session.run([disc_real,disc_fake,con_kernel_cost,class_loss_real,class_loss_fake,FSR_cost],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
+            d_real,d_fake,_con_kernel,real,fake,fsr,gp=session.run([disc_real,disc_fake,con_kernel_cost,class_loss_real,class_loss_fake,FSR_cost,gp_cost],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
         if iteration>0:
             lib.plot.plot('train disc cost fsr', _disc_cost)
             lib.plot.plot('D_real fsr',np.mean(d_real))
             lib.plot.plot('D_fake fsr',np.mean(d_fake))
             lib.plot.plot('con_kernel_loss fsr',_con_kernel)
+            lib.plot.plot('gp_cost fsr',gp)
             lib.plot.plot('fsr',fsr)
         if iteration%100==99:
             print "total_kernel_loss:"
