@@ -15,6 +15,7 @@ import tflib.ops.linear
 import tflib.ops.conv2d
 import tflib.ops.batchnorm
 import tflib.ops.deconv2d
+import tflib.ops.layernorm
 import tflib.save_images
 import tflib.mnist
 import tflib.plot
@@ -90,12 +91,12 @@ def Discriminator(inputs):
 
     output = lib.ops.conv2d.Conv2D('Discriminator.2', DIM, 2*DIM, 5, output, stride=2) # 50 [64,7,7]
     if MODE == 'wgan':
-        output = lib.ops.batchnorm.Batchnorm('Discriminator.BN2', [0,2,3], output)
+        output = lib.ops.layernorm.Layernorm('Discriminator.BN2', [1,2,3], output)
     output = LeakyReLU(output)
 
     output = lib.ops.conv2d.Conv2D('Discriminator.3', 2*DIM, 4*DIM, 5, output, stride=2) # 50 [128,4,4]
     if MODE == 'wgan':
-        output = lib.ops.batchnorm.Batchnorm('Discriminator.BN3', [0,2,3], output)
+        output = lib.ops.layernorm.Layernorm('Discriminator.BN3', [1,2,3], output)
     output = LeakyReLU(output)
 
     output = tf.reshape(output, [-1, 4*4*4*DIM]) # 50* (4*4*4*64)
@@ -152,8 +153,8 @@ slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
 gradient_penalty = tf.reduce_mean((slopes-1.)**2)
 gp_cost= 10*gradient_penalty
 
-gen_cost  = con_kernel_cost+(class_loss_fake) +100*FSR_cost
-disc_cost = -1*(con_kernel_cost)+(class_loss_real+class_loss_fake)+gp_cost+100*FSR_cost
+gen_cost  = con_kernel_cost+(class_loss_fake) +10*FSR_cost
+disc_cost = -1*(con_kernel_cost)+(class_loss_real+class_loss_fake)+gp_cost+10*FSR_cost
 
 gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(gen_cost, var_list=gen_params)
 disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(disc_cost, var_list=disc_params)
@@ -170,7 +171,7 @@ def generate_image(frame, true_dist):
     samples = session.run(fixed_noise_samples)
     lib.save_images.save_images(
         samples.reshape((100, 28, 28)),
-        './out3/samples_{}.jpg'.format(frame)
+        './out4/samples_{}.jpg'.format(frame)
     )
 
 # Dataset iterator
@@ -204,12 +205,12 @@ with tf.Session(config=config) as session:
             _disc_cost, _ = session.run([disc_cost, disc_train_op],feed_dict={real_data: _data,real_label:_label,ind_t:np.array(num_index)})
             d_real,d_fake,_con_kernel,fsr,gp_=session.run([disc_real,disc_fake,con_kernel_cost,FSR_cost,gp_cost],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
         if iteration>0:
-            lib.plot.plot('train disc cost conkernel', _disc_cost)
-            lib.plot.plot('D_real conkernel',np.mean(d_real))
-            lib.plot.plot('D_fake conkernel',np.mean(d_fake))
-            lib.plot.plot('con_kernel_loss conkernel',_con_kernel)
-            lib.plot.plot('gp_cost conkernel',gp_)
-            lib.plot.plot('fsr',fsr)
+            lib.plot.plot('train disc cost conkernel100', _disc_cost)
+            lib.plot.plot('D_real conkernel100',np.mean(d_real))
+            lib.plot.plot('D_fake conkernel100',np.mean(d_fake))
+            lib.plot.plot('con_kernel_loss conkernel100',_con_kernel)
+            lib.plot.plot('gp_cost conkernel100',gp_)
+            lib.plot.plot('fsr100',fsr)
         if iteration%100==99:
             print "total_kernel_loss:"
             print session.run(kernel_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
