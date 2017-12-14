@@ -127,6 +127,7 @@ class_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=
 bandwidths = [2.0, 5.0, 10.0, 20.0, 40.0, 80.0]
 kernel_cost = mmd.mix_rbf_mmd2(disc_real,disc_fake,sigmas=bandwidths,id=BATCH_SIZE)
 ind_t=tf.placeholder(tf.int32,[11])
+cum  = tf.placeholder(tf.float32)
 con_kernel_cost=0
 for i in range(10):
     find_index = tf.where(tf.equal(real_label,i))
@@ -221,9 +222,9 @@ gradient_penalty = tf.reduce_mean((slopes-1.)**2)
 gp_cost= 10*gradient_penalty
 
 #con_kernel_cost = k_0+k_1+k_2+k_3+k_4+k_5+k_6+k_7+k_8+k_9
-#con_kernel_cost =tf.div(con_kernel_cost,ind_t[10])
-gen_cost  = kernel_cost+con_kernel_cost+(class_loss_fake)
-disc_cost = -1*(kernel_cost+con_kernel_cost)+(class_loss_real+class_loss_fake)+gp_cost
+con_kernel_cost =tf.div(con_kernel_cost,cum)
+gen_cost  = kernel_cost+0.5*con_kernel_cost+(class_loss_fake)
+disc_cost = -1*(kernel_cost+0.5*con_kernel_cost)+(class_loss_real+class_loss_fake)+gp_cost
 
 gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(gen_cost, var_list=gen_params)
 disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(disc_cost, var_list=disc_params)
@@ -260,7 +261,7 @@ with tf.Session(config=config) as session:
         start_time = time.time()
         #     continue
         if iteration > 0:
-            _ = session.run(gen_train_op,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
+            _ = session.run(gen_train_op,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index),cum:num_index[10]})
         for i in xrange(CRITIC_ITERS):
             _data,_label = gen.next()
             num_index=[]
@@ -271,16 +272,17 @@ with tf.Session(config=config) as session:
                 num_index.append(whlen)
             num = np.shape(np.unique(_label))[0]
             num_index.append(num)
-            _disc_cost, _ = session.run([disc_cost, disc_train_op],feed_dict={real_data: _data,real_label:_label,ind_t:np.array(num_index)})
-            d_real,d_fake,_con_kernel,real,fake=session.run([disc_real,disc_fake,con_kernel_cost,class_loss_real,class_loss_fake],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
+            _disc_cost, _ = session.run([disc_cost, disc_train_op],feed_dict={real_data: _data,real_label:_label,ind_t:np.array(num_index),cum:num_index[10]})
+            d_real,d_fake,_con_kernel,real,fake,gpco=session.run([disc_real,disc_fake,con_kernel_cost,class_loss_real,class_loss_fake,gp_cost],feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index),cum:num_index[10]})
         if iteration>0:
             lib.plot.plot('train disc cost', _disc_cost)
             lib.plot.plot('D_real',np.mean(d_real))
             lib.plot.plot('D_fake',np.mean(d_fake))
             lib.plot.plot('con_kernel_loss',_con_kernel)
+            lib.plot.plot('gp_cost',gpco)
         if iteration%100==99:
             print "total_kernel_loss:"
-            print session.run(kernel_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
+            print session.run(kernel_cost,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index),cum:num_index[10]})
             print "con_kernel_loss:"
             print _con_kernel
             print "real_class:"

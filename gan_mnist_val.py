@@ -144,7 +144,7 @@ def generate_image(frame, true_dist):
     samples = session.run(fixed_noise_samples)
     lib.save_images.save_images(
         samples.reshape((100, 28, 28)),
-        './con_cifar_image/samples_{}.jpg'.format(frame)
+        './out1/samples_{}.jpg'.format(frame)
     )
 
 # Dataset iterator
