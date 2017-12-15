@@ -22,7 +22,7 @@ import tflib.plot
 
 from ops import mmd
 
-MODE = 'wgan' # dcgan, wgan, or wgan-gp
+MODE = 'wgan-gp' # dcgan, wgan, or wgan-gp
 DIM = 64 # Model dimensionality
 BATCH_SIZE = 50 # Batch size
 CRITIC_ITERS = 5 # For WGAN and WGAN-GP, number of critic iters per gen iter
@@ -172,7 +172,7 @@ def generate_image(frame, true_dist):
     samples = session.run(fixed_noise_samples)
     lib.save_images.save_images(
         samples.reshape((100, 28, 28)),
-        './out5/samples_{}.jpg'.format(frame)
+        './out_gp100_fsr10/samples_{}.jpg'.format(frame)
     )
 
 # Dataset iterator
