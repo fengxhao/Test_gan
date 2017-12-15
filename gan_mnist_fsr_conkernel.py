@@ -24,7 +24,7 @@ from ops import mmd
 
 MODE = 'wgan-gp' # dcgan, wgan, or wgan-gp
 DIM = 64 # Model dimensionality
-BATCH_SIZE = 50 # Batch size
+BATCH_SIZE = 64 # Batch size
 CRITIC_ITERS = 5 # For WGAN and WGAN-GP, number of critic iters per gen iter
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
 ITERS = 200000 # How many generator iterations to train for 
@@ -125,9 +125,10 @@ disc_params = lib.params_with_name('Discriminator')
 class_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=real_label_onehot,logits=disc_real_logit))
 class_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=real_label_onehot,logits=disc_fake_logit))
 
-bandwidths = [2.0, 5.0, 10.0, 20.0, 40.0, 80.0]
+#bandwidths = [2.0, 5.0, 10.0, 20.0, 40.0, 80.0]
+bandwidths = [1.0, 2.0, 4.0, 8.0, 16.0]
 kernel_cost = mmd.mix_rbf_mmd2(disc_real,disc_fake,sigmas=bandwidths,id=BATCH_SIZE)
-#kernel_cost = tf.sqrt(kernel_cost)
+kernel_cost = tf.sqrt(kernel_cost)
 ind_t=tf.placeholder(tf.int32,[11])
 con_kernel_cost=0
 for i in range(10):
@@ -154,8 +155,8 @@ slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
 gradient_penalty = tf.reduce_mean((slopes-1.)**2)
 gp_cost= 10*gradient_penalty
 
-gen_cost  = con_kernel_cost+(class_loss_fake)
-disc_cost = -1*(con_kernel_cost)+(class_loss_real+class_loss_fake)+gp_cost+10*FSR_cost
+gen_cost  = kernel_cost+con_kernel_cost+(class_loss_fake)
+disc_cost = -1*(kernel_cost+con_kernel_cost)+(class_loss_real+class_loss_fake)+gp_cost+10*FSR_cost
 
 
 gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4,beta1=0.5,beta2=0.9).minimize(gen_cost, var_list=gen_params)

@@ -38,7 +38,7 @@ def rbf_mmd2(X, Y, sigma=1, biased=True):
     return mix_rbf_mmd2(X, Y, sigmas=[sigma], biased=biased)
 
 
-def mix_rbf_mmd2(X, Y,id=1, sigmas=(1,), wts=None, biased=True):
+def mix_rbf_mmd2(X, Y,id=1, sigmas=None, wts=None, biased=True):
     K_XX, K_XY, K_YY, d = _mix_rbf_kernel(X, Y, sigmas, wts)
     return _mmd2(K_XX, K_XY, K_YY,id, const_diagonal=d, biased=biased)
 
