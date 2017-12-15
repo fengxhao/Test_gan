@@ -127,6 +127,7 @@ class_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=
 
 bandwidths = [2.0, 5.0, 10.0, 20.0, 40.0, 80.0]
 kernel_cost = mmd.mix_rbf_mmd2(disc_real,disc_fake,sigmas=bandwidths,id=BATCH_SIZE)
+#kernel_cost = tf.sqrt(kernel_cost)
 ind_t=tf.placeholder(tf.int32,[11])
 con_kernel_cost=0
 for i in range(10):
@@ -135,7 +136,7 @@ for i in range(10):
     Gimage_c = tf.gather(disc_fake,find_index)
     Image_c_s = tf.reshape(Image_c,[-1,1])
     Gimage_c_s = tf.reshape(Gimage_c,[-1,1])
-    con_kernel_cost+=mmd.mix_rbf_mmd2(Image_c_s,Gimage_c_s,sigmas=bandwidths,id=ind_t[i])
+    con_kernel_cost+=tf.sqrt(mmd.mix_rbf_mmd2(Image_c_s,Gimage_c_s,sigmas=bandwidths,id=ind_t[i]))
 
 alpha = tf.random_uniform(
    shape=[BATCH_SIZE,1],
@@ -151,7 +152,7 @@ inter_img,a,b=Discriminator(interpolates)
 gradients = tf.gradients(inter_img, [interpolates])[0]
 slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
 gradient_penalty = tf.reduce_mean((slopes-1.)**2)
-gp_cost= 100*gradient_penalty
+gp_cost= 10*gradient_penalty
 
 gen_cost  = con_kernel_cost+(class_loss_fake)
 disc_cost = -1*(con_kernel_cost)+(class_loss_real+class_loss_fake)+gp_cost+10*FSR_cost
