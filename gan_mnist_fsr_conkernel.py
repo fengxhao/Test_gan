@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sklearn.datasets
 import tensorflow as tf
-
+from tensorflow.examples.tutorials.mnist import input_data
 import tflib as lib
 import tflib.ops.linear
 import tflib.ops.conv2d
@@ -24,7 +24,7 @@ from ops import mmd
 
 MODE = 'wgan' # dcgan, wgan, or wgan-gp
 DIM = 64 # Model dimensionality
-BATCH_SIZE = 50 # Batch size
+BATCH_SIZE = 64 # Batch size
 CRITIC_ITERS = 5 # For WGAN and WGAN-GP, number of critic iters per gen iter
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
 ITERS = 200000 # How many generator iterations to train for 
@@ -107,11 +107,11 @@ def Discriminator(inputs):
     n_class = tf.nn.softmax(out_logit)
     return output_1,out_logit,n_class   #50
 real_data = tf.placeholder(tf.float32, shape=[BATCH_SIZE, OUTPUT_DIM])
-real_label = tf.placeholder(tf.int32,shape=[BATCH_SIZE])
+real_label = tf.placeholder(tf.float32,shape=[BATCH_SIZE,10])
 
-real_label_onehot = tf.one_hot(real_label,10)
+#real_label_onehot = tf.one_hot(real_label,10)
 
-fake_data = Generator(BATCH_SIZE,real_label_onehot)
+fake_data = Generator(BATCH_SIZE,real_label)
 
 disc_real,disc_real_logit,soft_class_real = Discriminator(real_data)
 disc_fake,disc_fake_logit,soft_class_fake = Discriminator(fake_data)
@@ -122,8 +122,8 @@ class_fake = tf.argmax(soft_class_fake,1)
 gen_params = lib.params_with_name('Generator')
 disc_params = lib.params_with_name('Discriminator')
 
-class_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=real_label_onehot,logits=disc_real_logit))
-class_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=real_label_onehot,logits=disc_fake_logit))
+class_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=real_label,logits=disc_real_logit))
+class_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=real_label,logits=disc_fake_logit))
 
 bandwidths = [2.0, 5.0, 10.0, 20.0, 40.0, 80.0]
 kernel_cost = mmd.mix_rbf_mmd2(disc_real,disc_fake,sigmas=bandwidths,id=BATCH_SIZE)
@@ -169,6 +169,8 @@ fixed_noise_samples = Generator(100, label=fix_label_onehot,noise=fixed_noise)
 #_,_,class_gen_label = Discriminator(fixed_noise_samples)
 #gen_label = tf.argmax(class_gen_label,1)
 
+mnist_data  = input_data.read_data_sets("../data",one_hot=True)
+
 def generate_image(frame, true_dist):
     samples = session.run(fixed_noise_samples)
     lib.save_images.save_images(
@@ -188,14 +190,17 @@ config.gpu_options.allow_growth=True
 # Train loop
 with tf.Session(config=config) as session:
     session.run(tf.initialize_all_variables())
-    gen = inf_train_gen()
+    #gen = inf_train_gen()
     for iteration in xrange(ITERS):
         start_time = time.time()
         #     continue
         if iteration > 0:
             _ = session.run(gen_train_op,feed_dict={real_data:_data,real_label:_label,ind_t:np.array(num_index)})
         for i in xrange(CRITIC_ITERS):
-            _data,_label = gen.next()
+            #_data,_label = gen.next()
+            data = mnist_data.train.next_batch(BATCH_SIZE)
+            _data = data[0]
+            _label = data[1]
             num_index=[]
             for ind in range(10):
                 whlen = len(np.where(_label==ind)[0])
