@@ -19,8 +19,8 @@ from ops import mmd
 # Download CIFAR-10 (Python version) at
 # https://www.cs.toronto.edu/~kriz/cifar.html and fill in the path to the
 # extracted files here!
-DATA_DIR = '/home/feng/ipyhthon/GAN_code/data/cifar-10'
-#DATA_DIR = '/home/shen/fh/data/cifar10'
+#DATA_DIR = '/home/feng/ipyhthon/GAN_code/data/cifar-10'
+DATA_DIR = '/home/shen/fh/data/cifar10'
 if len(DATA_DIR) == 0:
     raise Exception('Please specify path to data directory in gan_cifar.py!')
 
@@ -29,7 +29,7 @@ DIM = 128 # This overfits substantially; you're probably better off with 64
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
 CRITIC_ITERS = 5 # How many critic iterations per generator iteration
 BATCH_SIZE = 64 # Batch size
-ITERS = 100000 # How many generator iterations to train for
+ITERS = 150000 # How many generator iterations to train for
 OUTPUT_DIM = 3072 # Number of pixels in CIFAR10 (3*32*32)
 
 lib.print_model_settings(locals().copy())
@@ -120,9 +120,10 @@ for i in range(10):
     Gimage_c = tf.gather(disc_fake,find_index)
     Image_c_s = tf.reshape(Image_c,[-1,1])
     Gimage_c_s = tf.reshape(Gimage_c,[-1,1])
-    con_kernel_cost+=mmd.mix_rbf_mmd2(Image_c_s,Gimage_c_s,sigmas=bandwidths,id=ind_t[i])
+    con_kernel_cost+=tf.sqrt(mmd.mix_rbf_mmd2(Image_c_s,Gimage_c_s,sigmas=bandwidths,id=ind_t[i]))
 
-
+reduce_cost = tf.reduce_mean(disc_fake) -tf.reduce_mean(disc_real)
+FSR_cost = tf.nn.relu(reduce_cost)
 # gen_cost  = kernel_cost
 # disc_cost = -1*kernel_cost
 
@@ -143,9 +144,9 @@ slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
 gradient_penalty = tf.reduce_mean((slopes-1.)**2)
 gp_cost = LAMBDA*gradient_penalty
 
-con_kernel_cost =tf.div(con_kernel_cost,cum)
+#con_kernel_cost =tf.div(con_kernel_cost,cum)
 gen_cost  = con_kernel_cost+(class_loss_fake)
-disc_cost = -1*(con_kernel_cost)+(class_loss_real)+gp_cost
+disc_cost = -1*(con_kernel_cost)+(class_loss_fake+class_loss_real)+gp_cost+10*FSR_cost
 
 gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4, beta1=0.5, beta2=0.9).minimize(gen_cost, var_list=gen_params)
 disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4, beta1=0.5, beta2=0.9).minimize(disc_cost, var_list=disc_params)
@@ -160,7 +161,7 @@ fixed_noise_samples = Generator(100, label=fix_label_onehot,noise=fixed_noise_12
 def generate_image(frame, true_dist):
     samples = session.run(fixed_noise_samples)
     samples = ((samples+1.)*(255./2)).astype('int32')
-    lib.save_images.save_images(samples.reshape((128, 3, 32, 32)), './save_cifar_image/samples_{}.jpg'.format(frame))
+    lib.save_images.save_images(samples.reshape((100, 3, 32, 32)), './save_cifar_conkernel_gp10_fsr10_sqrt/samples_{}.jpg'.format(frame))
 
 # For calculating inception score
 fake_labels_100 = tf.cast(tf.random_uniform([100])*10, tf.int32)
@@ -206,18 +207,18 @@ with tf.Session() as session:
             _disc_cost,_,_gp,_con_cost,real,fake = session.run([disc_cost, disc_train_op,gp_cost,con_kernel_cost,class_loss_real,class_loss_fake], feed_dict={real_data_int: _data,real_label:_label,ind_t:np.array(num_index),cum:num_index[10]})
 
         #d_real,d_fake=session.run([disc_real,disc_fake],feed_dict={real_data_int:_data,real_label:_label,ind_t:np.array(num_index)})
-        lib.plot.plot('train disc cost', _disc_cost)
-        lib.plot.plot('class_real',real)
-        lib.plot.plot('class_fake',fake)
-        lib.plot.plot('gp_cost',_gp)
-        lib.plot.plot('con_kernel_cost',_con_cost)
+        lib.plot.plot('train disc cost cifar_conkernel_gp10_fsr10_sqrt', _disc_cost)
+        lib.plot.plot('class_real cifar_conkernel_gp10_fsr10_sqrt',real)
+        lib.plot.plot('class_fake cifar_conkernel_gp10_fsr10_sqrt',fake)
+        lib.plot.plot('gp_cost cifar_conkernel_gp10_fsr10_sqrt',_gp)
+        lib.plot.plot('con_kernel_cost cifar_conkernel_gp10_fsr10_sqrt',_con_cost)
         lib.plot.plot('time', time.time() - start_time)
 
 
         # Calculate inception score every 1K iters
         if iteration % 1000 == 999:
             inception_score = get_inception_score()
-            lib.plot.plot('inception score', inception_score[0])
+            lib.plot.plot('inception score cifar_conkernel_gp10_fsr10_sqrt', inception_score[0])
 
         # Calculate dev loss and generate samples every 100 iters
         if iteration % 100 == 99:
