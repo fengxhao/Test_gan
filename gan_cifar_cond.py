@@ -101,11 +101,14 @@ fake_data = Generator(BATCH_SIZE,label_onehot)
 disc_real,real_logit = Discriminator(real_data)
 disc_fake,fake_logit = Discriminator(fake_data)
 
+real_logit = tf.add(real_logit,1e-10)
+fake_logit = tf.add(fake_logit,1e-10)
+
 gen_params = lib.params_with_name('Generator')
 disc_params = lib.params_with_name('Discriminator')
 
-class_loss_real = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=real_label,logits=tf.clip_by_value(real_logit,1e-4,1)))
-class_loss_fake = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=real_label,logits=tf.clip_by_value(fake_logit,1e-4,1)))
+class_loss_real = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=real_label,logits=real_logit))
+class_loss_fake = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=real_label,logits=fake_logit))
 
 #******************************************
 bandwidths = [2.0, 5.0, 10.0, 20.0, 40.0, 80.0]
@@ -148,8 +151,8 @@ gp_cost = LAMBDA*gradient_penalty
 gen_cost  = con_kernel_cost+(class_loss_fake)
 disc_cost = -1*(con_kernel_cost)+(class_loss_fake+class_loss_real)+gp_cost+10*FSR_cost
 
-gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4, beta1=0.5, beta2=0.9).minimize(gen_cost, var_list=gen_params)
-disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4, beta1=0.5, beta2=0.9).minimize(disc_cost, var_list=disc_params)
+gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-5, beta1=0.5, beta2=0.9).minimize(gen_cost, var_list=gen_params)
+disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-5, beta1=0.5, beta2=0.9).minimize(disc_cost, var_list=disc_params)
 
 # For generating samples
 fixed_noise_128 = tf.constant(np.random.normal(size=(100, 128)).astype('float32'))
