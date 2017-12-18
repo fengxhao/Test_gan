@@ -104,8 +104,8 @@ disc_fake,fake_logit = Discriminator(fake_data)
 gen_params = lib.params_with_name('Generator')
 disc_params = lib.params_with_name('Discriminator')
 
-class_loss_real = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=real_label,logits=real_logit))
-class_loss_fake = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=real_label,logits=fake_logit))
+class_loss_real = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=real_label,logits=tf.clip_by_value(real_logit,1e-4,1)))
+class_loss_fake = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=real_label,logits=tf.clip_by_value(fake_logit,1e-4,1)))
 
 #******************************************
 bandwidths = [2.0, 5.0, 10.0, 20.0, 40.0, 80.0]
