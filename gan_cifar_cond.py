@@ -208,8 +208,7 @@ with tf.Session() as session:
             num = np.shape(np.unique(_label))[0]
             num_index.append(num)
             _disc_cost,_,_gp,_con_cost,real,fake = session.run([disc_cost, disc_train_op,gp_cost,con_kernel_cost,class_loss_real,class_loss_fake], feed_dict={real_data_int: _data,real_label:_label,ind_t:np.array(num_index),cum:num_index[10]})
-
-        #d_real,d_fake=session.run([disc_real,disc_fake],feed_dict={real_data_int:_data,real_label:_label,ind_t:np.array(num_index)})
+            d_real,d_fake=session.run([real_logit,fake_logit],feed_dict={real_data_int:_data,real_label:_label,ind_t:np.array(num_index)})
         lib.plot.plot('train disc cost cifar_conkernel_gp10_fsr10_sqrt', _disc_cost)
         lib.plot.plot('class_real cifar_conkernel_gp10_fsr10_sqrt',real)
         lib.plot.plot('class_fake cifar_conkernel_gp10_fsr10_sqrt',fake)
@@ -225,6 +224,8 @@ with tf.Session() as session:
 
         # Calculate dev loss and generate samples every 100 iters
         if iteration % 100 == 99:
+            print d_real
+            print d_fake
         #     dev_disc_costs = []
         #     for images,de_label in dev_gen():
         #         num_index_de=[]
