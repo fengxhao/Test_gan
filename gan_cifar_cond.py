@@ -23,7 +23,7 @@ from ops import mmd
 DATA_DIR = '/home/shen/fh/data/cifar10'
 if len(DATA_DIR) == 0:
     raise Exception('Please specify path to data directory in gan_cifar.py!')
-
+Check_point_DIR = '/home/shen/fh/'
 MODE = 'wgan-gp' # Valid options are dcgan, wgan, or wgan-gp
 DIM = 128 # This overfits substantially; you're probably better off with 64
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
@@ -31,7 +31,8 @@ CRITIC_ITERS = 5 # How many critic iterations per generator iteration
 BATCH_SIZE = 64 # Batch size
 ITERS = 150000 # How many generator iterations to train for
 OUTPUT_DIM = 3072 # Number of pixels in CIFAR10 (3*32*32)
-
+LR = 2e-4
+model_load = False
 lib.print_model_settings(locals().copy())
 
 def LeakyReLU(x, alpha=0.2):
@@ -96,6 +97,8 @@ real_data = 2*((tf.cast(real_data_int, tf.float32)/255.)-.5)
 real_label = tf.placeholder(tf.int32,shape=[BATCH_SIZE])
 label_onehot =tf.one_hot(real_label,10)
 
+inter = tf.placeholder(tf.int32,shape=None)
+
 fake_data = Generator(BATCH_SIZE,label_onehot)
 
 disc_real,real_logit = Discriminator(real_data)
@@ -109,6 +112,9 @@ disc_params = lib.params_with_name('Discriminator')
 
 class_loss_real = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=real_label,logits=real_logit))
 class_loss_fake = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=real_label,logits=fake_logit))
+
+delay = tf.maximum(0,1.-(tf.cast(iter,tf.float32)/ITERS))
+
 
 #******************************************
 bandwidths = [2.0, 5.0, 10.0, 20.0, 40.0, 80.0]
@@ -151,8 +157,8 @@ gp_cost = LAMBDA*gradient_penalty
 gen_cost  = con_kernel_cost+(class_loss_fake)
 disc_cost = -1*(con_kernel_cost)+(class_loss_fake+class_loss_real)+gp_cost+10*FSR_cost
 
-gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-5, beta1=0.5, beta2=0.9).minimize(gen_cost, var_list=gen_params)
-disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-5, beta1=0.5, beta2=0.9).minimize(disc_cost, var_list=disc_params)
+gen_train_op = tf.train.AdamOptimizer(learning_rate=LR*delay, beta1=0.5, beta2=0.9).minimize(gen_cost, var_list=gen_params)
+disc_train_op = tf.train.AdamOptimizer(learning_rate=LR*delay, beta1=0.5, beta2=0.9).minimize(disc_cost, var_list=disc_params)
 
 # For generating samples
 fixed_noise_128 = tf.constant(np.random.normal(size=(100, 128)).astype('float32'))
@@ -186,63 +192,72 @@ def inf_train_gen():
         for images,labels in train_gen():
             yield images,labels
 
+server = tf.train.Saver()
+counter =1
 # Train loop
-with tf.Session() as session:
-    session.run(tf.initialize_all_variables())
-    gen = inf_train_gen()
+session = tf.Session()
 
-    for iteration in xrange(ITERS):
-        start_time = time.time()
-        # Train generator
-        if iteration > 0:
-            _ = session.run(gen_train_op, feed_dict={real_data_int: _data,real_label:_label,ind_t:np.array(num_index),cum:num_index[10]})
-        # Train critic
-        for i in xrange(CRITIC_ITERS):
-            _data,_label = gen.next()
-            num_index=[]
-            for ind in range(10):
-                whlen = len(np.where(_label==ind)[0])
-                if whlen==0:
-                    whlen=1
-                num_index.append(whlen)
-            num = np.shape(np.unique(_label))[0]
-            num_index.append(num)
-            _disc_cost,_,_gp,_con_cost,real,fake = session.run([disc_cost, disc_train_op,gp_cost,con_kernel_cost,class_loss_real,class_loss_fake], feed_dict={real_data_int: _data,real_label:_label,ind_t:np.array(num_index),cum:num_index[10]})
-            d_real,d_fake=session.run([real_logit,fake_logit],feed_dict={real_data_int:_data,real_label:_label,ind_t:np.array(num_index)})
-        lib.plot.plot('train disc cost cifar_conkernel_gp10_fsr10_sqrt', _disc_cost)
-        lib.plot.plot('class_real cifar_conkernel_gp10_fsr10_sqrt',real)
-        lib.plot.plot('class_fake cifar_conkernel_gp10_fsr10_sqrt',fake)
-        lib.plot.plot('gp_cost cifar_conkernel_gp10_fsr10_sqrt',_gp)
-        lib.plot.plot('con_kernel_cost cifar_conkernel_gp10_fsr10_sqrt',_con_cost)
-        lib.plot.plot('time', time.time() - start_time)
+session.run(tf.initialize_all_variables())
+gen = inf_train_gen()
+if model_load:
+    server.restore(session,Check_point_DIR)
+for iteration in xrange(ITERS):
+    start_time = time.time()
+    # Train generator
+    if iteration > 0:
+        _ = session.run(gen_train_op, feed_dict={real_data_int: _data,real_label:_label,ind_t:np.array(num_index),cum:num_index[10],inter:counter})
+    # Train critic
+    for i in xrange(CRITIC_ITERS):
+        _data,_label = gen.next()
+        num_index=[]
+        for ind in range(10):
+            whlen = len(np.where(_label==ind)[0])
+            if whlen==0:
+                whlen=1
+            num_index.append(whlen)
+        num = np.shape(np.unique(_label))[0]
+        num_index.append(num)
+        _disc_cost,_,_gp,_con_cost,real,fake = session.run([disc_cost, disc_train_op,gp_cost,con_kernel_cost,class_loss_real,class_loss_fake], feed_dict={real_data_int: _data,real_label:_label,ind_t:np.array(num_index),cum:num_index[10],inter:counter})
+        d_real,d_fake=session.run([real_logit,fake_logit],feed_dict={real_data_int:_data,real_label:_label,ind_t:np.array(num_index),inter:counter})
+
+    lib.plot.plot('train disc cost cifar_conkernel_gp10_fsr10_sqrt', _disc_cost)
+    lib.plot.plot('class_real cifar_conkernel_gp10_fsr10_sqrt',real)
+    lib.plot.plot('class_fake cifar_conkernel_gp10_fsr10_sqrt',fake)
+    lib.plot.plot('gp_cost cifar_conkernel_gp10_fsr10_sqrt',_gp)
+    lib.plot.plot('con_kernel_cost cifar_conkernel_gp10_fsr10_sqrt',_con_cost)
+    lib.plot.plot('time', time.time() - start_time)
 
 
-        # Calculate inception score every 1K iters
-        if iteration % 1000 == 999:
-            inception_score = get_inception_score()
-            lib.plot.plot('inception score cifar_conkernel_gp10_fsr10_sqrt', inception_score[0])
+    # Calculate inception score every 1K iters
+    if iteration % 1000 == 999:
+        inception_score = get_inception_score()
+        lib.plot.plot('inception score cifar_conkernel_gp10_fsr10_sqrt', inception_score[0])
 
-        # Calculate dev loss and generate samples every 100 iters
-        if iteration % 100 == 99:
-            print d_real
-            print d_fake
-        #     dev_disc_costs = []
-        #     for images,de_label in dev_gen():
-        #         num_index_de=[]
-        #         for ind in range(10):
-        #             whlen = len(np.where(de_label==ind)[0])
-        #             if whlen==0:
-        #                 whlen=1
-        #             num_index_de.append(whlen)
-        #         num = np.shape(np.unique(de_label))[0]
-        #         num_index_de.append(num)
-        #         _dev_disc_cost = session.run(disc_cost, feed_dict={real_data_int: images,_label:de_label,ind_t:np.array(num_index_de),cum:num_index_de[10]})
-        #         dev_disc_costs.append(_dev_disc_cost)
-        #     lib.plot.plot('dev disc cost', np.mean(dev_disc_costs))
-            generate_image(iteration, _data)
+    # Calculate dev loss and generate samples every 100 iters
+    counter=+1
+    if counter%100==0:
+        server.save(session,Check_point_DIR,counter)
+    if iteration % 100 == 99:
+        print d_real
+        print d_fake
+    #     dev_disc_costs = []
+    #     for images,de_label in dev_gen():
+    #         num_index_de=[]
+    #         for ind in range(10):
+    #             whlen = len(np.where(de_label==ind)[0])
+    #             if whlen==0:
+    #                 whlen=1
+    #             num_index_de.append(whlen)
+    #         num = np.shape(np.unique(de_label))[0]
+    #         num_index_de.append(num)
+    #         _dev_disc_cost = session.run(disc_cost, feed_dict={real_data_int: images,_label:de_label,ind_t:np.array(num_index_de),cum:num_index_de[10]})
+    #         dev_disc_costs.append(_dev_disc_cost)
+    #     lib.plot.plot('dev disc cost', np.mean(dev_disc_costs))
+        generate_image(iteration, _data)
 
-        # Save logs every 100 iters
-        if (iteration < 5) or (iteration % 100 == 99):
-            lib.plot.flush()
+    # Save logs every 100 iters
+    if (iteration < 5) or (iteration % 100 == 99):
+        lib.plot.flush()
 
-        lib.plot.tick()
+    lib.plot.tick()
+session.close()
