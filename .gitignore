@@ -1,2 +1,6 @@
 *png
 *jpg
+*.meta
+*.data*
+*index*
+./model_cifar_save
