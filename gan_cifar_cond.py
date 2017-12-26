@@ -118,7 +118,8 @@ gen_params = lib.params_with_name('Generator')
 disc_params = lib.params_with_name('Discriminator')
 
 for dis_w in disc_params:
-    tf.summary.scalar(str(dis_w),dis_w)
+    tf.summary.scalar(dis_w.name,dis_w)
+    tf.RunOptions(trace_leve)
 
 class_loss_real = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=real_label,logits=real_logit))
 class_loss_fake = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=real_label,logits=fake_logit))
@@ -192,12 +193,17 @@ fixed_noise_128 = tf.constant(np.random.normal(size=(100, 128)).astype('float32'
 fixed_labels = tf.constant(np.array([0,1,2,3,4,5,6,7,8,9]*10,dtype='int32'))
 fix_label_onehot = tf.one_hot(tf.reshape(fixed_labels,[100]),10)
 fixed_noise_samples = Generator(100, label=fix_label_onehot,noise=fixed_noise_128)
+fixed_samples=tf.cast((fixed_noise_samples+1.)*(255./2),tf.float32)
+im_gen = tf.transpose(tf.reshape(fixed_samples,[-1,3,32,32]),perm=[0,2,3,1])
+
+tf.summary.image("Test/gen image",imageRearrange(im_gen,8))
 
 def generate_image(frame, true_dist):
     samples = session.run(fixed_noise_samples)
     samples = ((samples+1.)*(255./2)).astype('int32')
     lib.save_images.save_images(samples.reshape((100, 3, 32, 32)), './save_cifar_conkernel_gp10_fsr10_sqrt/samples_{}.jpg'.format(frame))
-    tf.summary.image("Test/gen image",imageRearrange(samples,8))
+
+    #tf.summary.image("Test/gen image",imageRearrange(im,8))
 
 # For calculating inception score
 fake_labels_100 = tf.cast(tf.random_uniform([100])*10, tf.int32)
