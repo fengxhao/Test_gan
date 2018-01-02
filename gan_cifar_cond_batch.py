@@ -20,15 +20,16 @@ from ops import mmd
 # Download CIFAR-10 (Python version) at
 # https://www.cs.toronto.edu/~kriz/cifar.html and fill in the path to the
 # extracted files here!
-DATA_DIR = '/home/feng/ipyhthon/GAN_code/data/cifar-10'
+#DATA_DIR = '/home/feng/ipyhthon/GAN_code/data/cifar-10'
 #DATA_DIR = '/home/shen/fh/data/cifar10'
+DATA_DIR = '/home/b808/Workplace/fh/data/cifar10'
 if len(DATA_DIR) == 0:
     raise Exception('Please specify path to data directory in gan_cifar.py!')
 #Check_point_DIR = '/home/shen/fh/Test_gan/model_cifar_save/'
-Check_point_DIR = '/home/feng/ipyhthon/GAN_code/AC_gan/model_cifar_save/'
-#Check_point_DIR = '/home/shen/fh/'
+#Check_point_DIR = '/home/feng/ipyhthon/GAN_code/AC_gan/model_cifar_save/'
+Check_point_DIR = '/home/b808/Workplace/fh/Test_gan/'
 #summary_log_dir = '/home/shen/fh/log_gan/'
-summary_log_dir = '/home/feng/ipyhthon/GAN_code/log_gan'
+#summary_log_dir = '/home/feng/ipyhthon/GAN_code/log_gan'
 MODE = 'wgan-gp' # Valid options are dcgan, wgan, or wgan-gp
 DIM = 128 # This overfits substantially; you're probably better off with 64
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
@@ -130,12 +131,12 @@ disc_params = lib.params_with_name('Discriminator')
 
 class_loss_real = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=label_onehot,logits=real_logit))
 class_loss_fake = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=label_onehot,logits=fake_logit))
-for dis_w in disc_params:
-    #tf.summary.scalar(dis_w.name,dis_w)
-    print dis_w.name
-    if dis_w.name.find("Filters"):	
-       tf.summary.scalar("mean/"+dis_w.name,tf.reduce_mean(dis_w))
-       tf.summary.histogram("Filters/"+dis_w.name,dis_w)
+# for dis_w in disc_params:
+#     #tf.summary.scalar(dis_w.name,dis_w)
+#     print dis_w.name
+#     if dis_w.name.find("Filters"):
+#        tf.summary.scalar("mean/"+dis_w.name,tf.reduce_mean(dis_w))
+#        tf.summary.histogram("Filters/"+dis_w.name,dis_w)
     #tf.summary.scalar(dis_w.name,dis_w)
 
 #class_loss_real = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=real_label,logits=real_logit))
@@ -188,21 +189,21 @@ gp_cost = LAMBDA*gradient_penalty
 
 #con_kernel_cost =tf.div(con_kernel_cost,cum)
 gen_cost  = con_kernel_cost+(class_loss_fake)
-disc_cost = -1*(con_kernel_cost)+(class_loss_fake+class_loss_real)+gp_cost+10*FSR_cost
+disc_cost = -1*(con_kernel_cost)+(class_loss_real)+gp_cost+10*FSR_cost
 
 gen_train_op = tf.train.AdamOptimizer(learning_rate=LR, beta1=0.5, beta2=0.9).minimize(gen_cost, var_list=gen_params)
 disc_train_op = tf.train.AdamOptimizer(learning_rate=LR, beta1=0.5, beta2=0.9).minimize(disc_cost, var_list=disc_params)
 real_img = tf.cast(tf.transpose(tf.reshape(real_data_int,[64,3,32,32]),perm=[0,2,3,1]),tf.float32)
 
-tf.summary.image("Test/train image",imageRearrange(real_img,8))
-tf.summary.scalar('Class/class_real',class_loss_real)
-tf.summary.scalar('Class/class_fake',class_loss_fake)
-tf.summary.scalar('Kernel/con_kernel',con_kernel_cost)
-tf.summary.scalar('Kernel/total_kernel',kernel_cost)
-tf.summary.scalar('Cost/gen_cost',gen_cost)
-tf.summary.scalar('Cost/disc_cost',disc_cost)
-tf.summary.scalar('Cost/gp_cost',gp_cost)
-tf.summary.scalar('Cost/fsr_cost',FSR_cost)
+# tf.summary.image("Test/train image",imageRearrange(real_img,8))
+# tf.summary.scalar('Class/class_real',class_loss_real)
+# tf.summary.scalar('Class/class_fake',class_loss_fake)
+# tf.summary.scalar('Kernel/con_kernel',con_kernel_cost)
+# tf.summary.scalar('Kernel/total_kernel',kernel_cost)
+# tf.summary.scalar('Cost/gen_cost',gen_cost)
+# tf.summary.scalar('Cost/disc_cost',disc_cost)
+# tf.summary.scalar('Cost/gp_cost',gp_cost)
+# tf.summary.scalar('Cost/fsr_cost',FSR_cost)
 
 
 #gen_train_op = tf.train.AdamOptimizer(learning_rate=LR*delay, beta1=0.5, beta2=0.9).minimize(gen_cost, var_list=gen_params)
@@ -217,12 +218,12 @@ fixed_noise_samples = Generator(100, label=fixed_labels,noise=fixed_noise_128)
 fixed_samples=tf.cast((fixed_noise_samples+1.)*(255./2),tf.float32)
 im_gen = tf.transpose(tf.reshape(fixed_samples,[-1,3,32,32]),perm=[0,2,3,1])
 
-tf.summary.image("Test/gen image",imageRearrange(im_gen,8))
+#tf.summary.image("Test/gen image",imageRearrange(im_gen,8))
 
 def generate_image(frame, true_dist):
     samples = session.run(fixed_noise_samples)
     samples = ((samples+1.)*(255./2)).astype('int32')
-    lib.save_images.save_images(samples.reshape((100, 3, 32, 32)), './save_cifar_conkernel_gp10_fsr10_sqrt/samples_{}.jpg'.format(frame))
+    lib.save_images.save_images(samples.reshape((100, 3, 32, 32)), './save_cifar_conkernel_gp10_fsr10_sqrt_batch_normal/samples_{}.jpg'.format(frame))
 
     #tf.summary.image("Test/gen image",imageRearrange(im,8))
     #tf.summary.image("Test/gen image",imageRearrange(samples,10))
@@ -263,8 +264,8 @@ if model_load:
     server.restore(session,Check_point_DIR)
 
 
-summary = tf.summary.merge_all()
-write = tf.summary.FileWriter(summary_log_dir,session.graph)
+# summary = tf.summary.merge_all()
+# write = tf.summary.FileWriter(summary_log_dir,session.graph)
 #run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
 #run_metadata = tf.RunMetadata()
 for iteration in xrange(ITERS):
@@ -286,30 +287,28 @@ for iteration in xrange(ITERS):
         num_index.append(num)
         session.run([disc_train_op],feed_dict={real_data_int:_data,real_label:_label,ind_t:np.array(num_index),inter:counter})
 
-        #_disc_cost,_,_gp,_con_cost,real,fake = session.run([disc_cost, disc_train_op,gp_cost,con_kernel_cost,class_loss_real,class_loss_fake], feed_dict={real_data_int: _data,real_label:_label,ind_t:np.array(num_index),cum:num_index[10],inter:counter})
-        #d_real,d_fake=session.run([real_logit,fake_logit],feed_dict={real_data_int:_data,real_label:_label,ind_t:np.array(num_index),inter:counter})
-
-
-    # lib.plot.plot('train disc cost cifar_conkernel_gp10_fsr10_sqrt', _disc_cost)
-    # lib.plot.plot('class_real cifar_conkernel_gp10_fsr10_sqrt',real)
-    # lib.plot.plot('class_fake cifar_conkernel_gp10_fsr10_sqrt',fake)
-    # lib.plot.plot('gp_cost cifar_conkernel_gp10_fsr10_sqrt',_gp)
-    # lib.plot.plot('con_kernel_cost cifar_conkernel_gp10_fsr10_sqrt',_con_cost)
-        lib.plot.plot('time', time.time() - start_time)
+    _disc_cost,_,_gp,_con_cost,real,fake = session.run([disc_cost, disc_train_op,gp_cost,con_kernel_cost,class_loss_real,class_loss_fake], feed_dict={real_data_int: _data,real_label:_label,ind_t:np.array(num_index),cum:num_index[10],inter:counter})
+    d_real,d_fake=session.run([real_logit,fake_logit],feed_dict={real_data_int:_data,real_label:_label,ind_t:np.array(num_index),inter:counter})
+    lib.plot.plot('train disc cost cifar_conkernel_gp10_fsr10_sqrt_batch_normal', _disc_cost)
+    lib.plot.plot('class_real cifar_conkernel_gp10_fsr10_sqrt_batch_normal',real)
+    lib.plot.plot('class_fake cifar_conkernel_gp10_fsr10_sqrt_batch_normal',fake)
+    lib.plot.plot('gp_cost cifar_conkernel_gp10_fsr10_sqrt_batch_normal',_gp)
+    lib.plot.plot('con_kernel_cost cifar_conkernel_gp10_fsr10_sqrt_batch_normal',_con_cost)
+    lib.plot.plot('time', time.time() - start_time)
 
      
-    summ = session.run(summary,feed_dict={real_data_int:_data,real_label:_label,ind_t:np.array(num_index),inter:counter})
+    #summ = session.run(summary,feed_dict={real_data_int:_data,real_label:_label,ind_t:np.array(num_index),inter:counter})
     # Calculate inception score every 1K iters
     if iteration % 1000 == 999:
         isore = get_inception_score()
-        lib.plot.plot('inception score cifar_conkernel_gp10_fsr10_sqrt', isore[0])
+        lib.plot.plot('inception score cifar_conkernel_gp10_fsr10_sqrt_batch_normal', isore[0])
 
     # Calculate dev loss and generate samples every 100 iters
     counter+=1
     if counter%100==0:
         server.save(session,Check_point_DIR,counter)
-    if counter%10==1:
-        write.add_summary(summ,counter)
+    #if counter%10==1:
+    #    write.add_summary(summ,counter)
         #write.add_run_metadata(run_metadata,"step{}".format(i))
     if iteration % 100 == 99:
         # print d_real
