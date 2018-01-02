@@ -11,6 +11,7 @@ import tflib.ops.linear
 import tflib.ops.conv2d
 import tflib.ops.batchnorm
 import tflib.ops.deconv2d
+import tflib.ops.cond_batchnorm
 import tflib.save_images
 import tflib.cifar10
 import tflib.inception_score
@@ -19,13 +20,15 @@ from ops import mmd
 # Download CIFAR-10 (Python version) at
 # https://www.cs.toronto.edu/~kriz/cifar.html and fill in the path to the
 # extracted files here!
-#DATA_DIR = '/home/feng/ipyhthon/GAN_code/data/cifar-10'
-DATA_DIR = '/home/shen/fh/data/cifar10'
+DATA_DIR = '/home/feng/ipyhthon/GAN_code/data/cifar-10'
+#DATA_DIR = '/home/shen/fh/data/cifar10'
 if len(DATA_DIR) == 0:
     raise Exception('Please specify path to data directory in gan_cifar.py!')
 #Check_point_DIR = '/home/shen/fh/Test_gan/model_cifar_save/'
-Check_point_DIR = '/home/shen/fh/'
-summary_log_dir = '/home/shen/fh/log_gan/'
+Check_point_DIR = '/home/feng/ipyhthon/GAN_code/AC_gan/model_cifar_save/'
+#Check_point_DIR = '/home/shen/fh/'
+#summary_log_dir = '/home/shen/fh/log_gan/'
+summary_log_dir = '/home/feng/ipyhthon/GAN_code/log_gan'
 MODE = 'wgan-gp' # Valid options are dcgan, wgan, or wgan-gp
 DIM = 128 # This overfits substantially; you're probably better off with 64
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
@@ -52,17 +55,23 @@ def LeakyReLULayer(name, n_in, n_out, inputs):
 def Generator(n_samples,label, noise=None):
     if noise is None:
         noise = tf.random_normal([n_samples, 128])
-    noisez = tf.concat([noise,label],1)
-    output = lib.ops.linear.Linear('Generator.Input', 138, 4*4*4*DIM, noisez)
+    #noisez = tf.concat([noise,label],1)
+    output = lib.ops.linear.Linear('Generator.Input', 128, 4*4*4*DIM, noise)
+    output = tf.reshape(output, [-1, 4*DIM, 4, 4])
+    output = lib.ops.cond_batchnorm.Batchnorm("Generator.BN1",[0,2,3],output,labels=label,n_labels=10)
+
     #output = lib.ops.batchnorm.Batchnorm('Generator.BN1', [0], output)
     output = tf.nn.relu(output)
-    output = tf.reshape(output, [-1, 4*DIM, 4, 4])
+    #output = tf.reshape(output, [-1, 4*DIM, 4, 4])
 
     output = lib.ops.deconv2d.Deconv2D('Generator.2', 4*DIM, 2*DIM, 5, output)
+    output = lib.ops.cond_batchnorm.Batchnorm("Generator.BN2",[0,2,3],output,labels=label,n_labels=10)
     #output = lib.ops.batchnorm.Batchnorm('Generator.BN2', [0,2,3], output)
     output = tf.nn.relu(output)
 
     output = lib.ops.deconv2d.Deconv2D('Generator.3', 2*DIM, DIM, 5, output)
+    output = lib.ops.cond_batchnorm.Batchnorm("Generator.BN3",[0,2,3],output,labels=label,n_labels=10)
+
     #output = lib.ops.batchnorm.Batchnorm('Generator.BN3', [0,2,3], output)
     output = tf.nn.relu(output)
 
@@ -110,8 +119,8 @@ real_label = tf.placeholder(tf.int32,shape=[BATCH_SIZE])
 label_onehot =tf.one_hot(real_label,10)
 
 inter = tf.placeholder(tf.int32,shape=None)
+fake_data = Generator(BATCH_SIZE,real_label)
 
-fake_data = Generator(BATCH_SIZE,label_onehot)
 
 disc_real,real_logit = Discriminator(real_data)
 disc_fake,fake_logit = Discriminator(fake_data)
@@ -122,7 +131,7 @@ disc_params = lib.params_with_name('Discriminator')
 class_loss_real = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=label_onehot,logits=real_logit))
 class_loss_fake = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=label_onehot,logits=fake_logit))
 for dis_w in disc_params:
-    tf.summary.scalar(dis_w.name,dis_w)
+    #tf.summary.scalar(dis_w.name,dis_w)
     print dis_w.name
     if dis_w.name.find("Filters"):	
        tf.summary.scalar("mean/"+dis_w.name,tf.reduce_mean(dis_w))
@@ -204,7 +213,7 @@ fixed_noise_128 = tf.constant(np.random.normal(size=(100, 128)).astype('float32'
 
 fixed_labels = tf.constant(np.array([0,1,2,3,4,5,6,7,8,9]*10,dtype='int32'))
 fix_label_onehot = tf.one_hot(tf.reshape(fixed_labels,[100]),10)
-fixed_noise_samples = Generator(100, label=fix_label_onehot,noise=fixed_noise_128)
+fixed_noise_samples = Generator(100, label=fixed_labels,noise=fixed_noise_128)
 fixed_samples=tf.cast((fixed_noise_samples+1.)*(255./2),tf.float32)
 im_gen = tf.transpose(tf.reshape(fixed_samples,[-1,3,32,32]),perm=[0,2,3,1])
 
@@ -221,7 +230,7 @@ def generate_image(frame, true_dist):
 # For calculating inception score
 fake_labels_100 = tf.cast(tf.random_uniform([100])*10, tf.int32)
 fake_onhot  = tf.one_hot(fake_labels_100,10)
-samples_100 = Generator(100, fake_onhot)
+samples_100 = Generator(100, fake_labels_100)
 def get_inception_score():
     all_samples = []
     for i in xrange(10):
